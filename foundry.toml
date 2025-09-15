@@ -1,0 +1,23 @@
+[profile.default]
+src = "src"
+out = "out"
+libs = ["lib"]
+
+# Solidity compiler version to use
+solc_version = '0.8.26'
+
+# Target EVM upgrade (Cancun includes latest opcodes/features)
+evm_version = "cancun"
+
+# Solidity optimizer: higher = better runtime gas, worse deployment cost
+optimizer_runs = 800
+
+# Whether to compile via the intermediate representation (Yul IR)
+# true = more aggressive optimizations, false = faster/older pipeline
+via_ir = false
+
+# Allow Foundry to call external system commands in tests/scripts
+# ⚠️ Security risk: can run arbitrary shell commands
+ffi = true
+
+# See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
