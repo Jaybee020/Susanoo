@@ -20,4 +20,7 @@ via_ir = false
 # ⚠️ Security risk: can run arbitrary shell commands
 ffi = true
 
+# REQUIRED for FHE testing - prevents variable sharing between tests
+isolate = true
+
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options

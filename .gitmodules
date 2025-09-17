@@ -3,7 +3,13 @@
 	url = https://github.com/foundry-rs/forge-std
 [submodule "lib/v4-periphery"]
 	path = lib/v4-periphery
-	url = https://github.com/Uniswap/v4-periphery
+	url = https://github.com/FhenixProtocol/cofhe-contractshttps://github.com/Uniswap/v4-periphery
 [submodule "lib/openzeppelin-contracts"]
 	path = lib/openzeppelin-contracts
 	url = https://github.com/OpenZeppelin/openzeppelin-contracts
+[submodule "lib/cofhe-contracts"]
+	path = lib/cofhe-contracts
+	url = https://github.com/FhenixProtocol/cofhe-contracts
+[submodule "lib/cofhe-mock-contracts"]
+	path = lib/cofhe-mock-contracts
+	url = https://github.com/FhenixProtocol/cofhe-mock-contracts
