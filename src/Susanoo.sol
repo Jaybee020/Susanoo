@@ -24,8 +24,9 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "cofhe-contracts/FHE.sol";
 import {Queue} from "./Queue.sol";
+import {IUnlockCallback} from "@uniswap/v4-core/src/interfaces/callback/IUnlockCallback.sol";
 
-contract Susanoo is BaseHook, ERC1155, ReentrancyGuard {
+contract Susanoo is BaseHook, IUnlockCallback, ReentrancyGuard {
     //add helper functions to pool manager to help read storage values
     using StateLibrary for IPoolManager;
     using FixedPointMathLib for uint256;
@@ -88,7 +89,7 @@ contract Susanoo is BaseHook, ERC1155, ReentrancyGuard {
     event OrderCancelled(uint256 orderId, address indexed trader, PoolId indexed keyId);
     event DecryptionRequested(uint256 orderId, euint128 conditionHandle);
 
-    constructor(IPoolManager _poolManager, string memory _uri) BaseHook(_poolManager) ERC1155(_uri) {}
+    constructor(IPoolManager _poolManager) BaseHook(_poolManager) {}
 
     function getHookPermissions() public pure override returns (Hooks.Permissions memory) {
         return Hooks.Permissions({
@@ -117,6 +118,7 @@ contract Susanoo is BaseHook, ERC1155, ReentrancyGuard {
         InEbool memory inOrderType,
         uint256 amount
     ) external nonReentrant returns (uint256) {
+        flushOrder(key); //flush Queue to prevent build up
         uint256 orderId = nextOrderId;
         PoolId keyId = key.toId();
         euint32 triggerTick = FHE.asEuint32(inTriggerTick);
@@ -284,7 +286,7 @@ contract Susanoo is BaseHook, ERC1155, ReentrancyGuard {
     /**
      * @dev Phase 2: Process decrypted conditions and execute valid orders
      */
-    function _executeDecryptedOrders(PoolKey calldata key) private {
+    function _executeDecryptedOrders(PoolKey memory key) private {
         Queue queue = poolDecryptionQueues[key.toId()];
         if (address(queue) == address(0)) {
             return; //no queue
@@ -339,7 +341,7 @@ contract Susanoo is BaseHook, ERC1155, ReentrancyGuard {
         return result;
     }
 
-    function _executeOrder(PoolKey calldata key, uint256 orderId) private nonReentrant {
+    function _executeOrder(PoolKey memory key, uint256 orderId) private nonReentrant {
         Order storage order = orders[orderId];
         require(order.status == OrderStatus.Placed, "Order not active");
         require(uint256(PoolId.unwrap(order.keyId)) == uint256(PoolId.unwrap(key.toId())), "Invalid PoolKey");
@@ -374,7 +376,22 @@ contract Susanoo is BaseHook, ERC1155, ReentrancyGuard {
         emit OrderExecuted(orderId, order.trader, currentTick, key.toId());
     }
 
-    function _swapAndSettleBalances(PoolKey calldata key, SwapParams memory params) internal returns (BalanceDelta) {
+    function flushOrder(PoolKey calldata key) public nonReentrant {
+        poolManager.unlock(abi.encode(key));
+    }
+
+    /**
+     * @dev Callback function called when pool manager lock is acquired
+     * @param data Encoded PoolKey data
+     * @return Empty bytes as no return data needed
+     */
+    function unlockCallback(bytes calldata data) external override onlyPoolManager returns (bytes memory) {
+        PoolKey memory key = abi.decode(data, (PoolKey));
+        _executeDecryptedOrders(key); // Process token1 -> token0 orders
+        return ZERO_BYTES;
+    }
+
+    function _swapAndSettleBalances(PoolKey memory key, SwapParams memory params) internal returns (BalanceDelta) {
         BalanceDelta delta = poolManager.swap(key, params, "");
         //we swapped token0 for token1
         if (params.zeroForOne) {

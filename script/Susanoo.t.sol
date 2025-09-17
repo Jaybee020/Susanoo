@@ -60,7 +60,7 @@ contract SusanooTest is Test, Deployers, CoFheTest {
         console.log("Expected hook address:", hookAddress);
 
         // Deploy the contract to the expected hook address
-        deployCodeTo("Susanoo.sol:Susanoo", abi.encode(manager, ""), hookAddress);
+        deployCodeTo("Susanoo.sol:Susanoo", abi.encode(manager), hookAddress);
         susanoo = Susanoo(hookAddress);
 
         // Setup token approvals for test users
