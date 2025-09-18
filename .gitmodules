@@ -13,3 +13,6 @@
 [submodule "lib/cofhe-mock-contracts"]
 	path = lib/cofhe-mock-contracts
 	url = https://github.com/FhenixProtocol/cofhe-mock-contracts
+[submodule "lib/permit2"]
+	path = lib/permit2
+	url = https://github.com/Uniswap/permit2

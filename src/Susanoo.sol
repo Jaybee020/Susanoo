@@ -25,8 +25,9 @@ import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet
 import "cofhe-contracts/FHE.sol";
 import {Queue} from "./Queue.sol";
 import {IUnlockCallback} from "@uniswap/v4-core/src/interfaces/callback/IUnlockCallback.sol";
+import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
 
-contract Susanoo is BaseHook, IUnlockCallback, ReentrancyGuard {
+contract Susanoo is BaseHook, IUnlockCallback, ReentrancyGuardTransient {
     //add helper functions to pool manager to help read storage values
     using StateLibrary for IPoolManager;
     using FixedPointMathLib for uint256;
@@ -117,7 +118,7 @@ contract Susanoo is BaseHook, IUnlockCallback, ReentrancyGuard {
         InEuint32 memory inTriggerTick,
         InEbool memory inOrderType,
         uint256 amount
-    ) external nonReentrant returns (uint256) {
+    ) external returns (uint256) {
         flushOrder(key); //flush Queue to prevent build up
         uint256 orderId = nextOrderId;
         PoolId keyId = key.toId();
@@ -150,7 +151,6 @@ contract Susanoo is BaseHook, IUnlockCallback, ReentrancyGuard {
     //TODO:add slippage, handle ETH transfers too.
     function editOrder(PoolKey calldata key, uint256 orderId, InEuint32 memory inNewTriggerTick, int256 amountDelta)
         external
-        nonReentrant
     {
         Order storage order = orders[orderId];
         require(uint256(PoolId.unwrap(order.keyId)) == uint256(PoolId.unwrap(key.toId())), "Invalid PoolKey");
