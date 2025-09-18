@@ -1,21 +1,11 @@
-import { ethers, MaxUint256, Signer } from "ethers";
+import { ethers } from "ethers";
 import { cofhejs, Encryptable, FheTypes } from "cofhejs/web";
-import {
-  HOOK_ADDRESS,
-  PRIVATE_KEY,
-  PROVIDER_RPC_URL,
-} from "../utils/constants";
+import { PRIVATE_KEY, PROVIDER_RPC_URL } from "../utils/constants";
 import { Wallet } from "ethers";
 import { JsonRpcProvider } from "ethers";
-import { Contract } from "ethers";
-
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms * 1000));
-}
 
 class CofheService {
   private provider: ethers.BrowserProvider | ethers.JsonRpcProvider;
-  private isInitialized = false;
 
   constructor() {
     this.provider = new JsonRpcProvider(PROVIDER_RPC_URL);
@@ -39,7 +29,7 @@ class CofheService {
         environment: "TESTNET",
       });
 
-      this.isInitialized = true;
+      // this.isInitialized = true;
       console.log("FhenixJS initialized successfully");
     } catch (error) {
       console.error("Failed to initialize FhenixJS:", error);
@@ -53,7 +43,7 @@ class CofheService {
     await this.ensureInitialized();
 
     try {
-      const permit = await cofhejs.createPermit({
+      await cofhejs.createPermit({
         type: "self",
         issuer: signerAddr,
       });
@@ -180,11 +170,14 @@ class CofheService {
 
     try {
       // Request account access
+      if (!window.ethereum) {
+        throw new Error("MetaMask not installed");
+      }
       await window.ethereum.request({ method: "eth_requestAccounts" });
 
       // Reinitialize with connected wallet
       this.provider = new ethers.BrowserProvider(window.ethereum);
-      this.isInitialized = false; // Reset to reinitialize with new signer
+      // this.isInitialized = false; // Reset to reinitialize with new signer
 
       await this.initialize();
     } catch (error) {

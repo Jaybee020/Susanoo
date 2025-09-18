@@ -59,7 +59,6 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ onOrderCreate }) => {
   const watchedFields = watch();
   const orderType = watchedFields.orderType;
   const percentage = watchedFields.percentage;
-  const customPercentage = watchedFields.customPercentage;
 
   const handlePoolValidation = (isValid: boolean, info?: PoolInfo) => {
     setIsPoolValid(isValid);
@@ -176,11 +175,13 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ onOrderCreate }) => {
               <span className={styles.infoLabel}>Current Price:</span>
               <span className={styles.infoValue}>
                 {parseFloat(
-                  poolService.calculatePrice(
-                    poolInfo.sqrtPriceX96,
-                    poolInfo.token0Decimals,
-                    poolInfo.token1Decimals
-                  )
+                  poolService
+                    .calculatePrice(
+                      BigInt(poolInfo.sqrtPriceX96),
+                      poolInfo.token0Decimals,
+                      poolInfo.token1Decimals
+                    )
+                    .toString()
                 ).toFixed(6)}{" "}
                 {poolInfo.token1Symbol}/{poolInfo.token0Symbol}
               </span>

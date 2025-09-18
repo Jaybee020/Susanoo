@@ -240,6 +240,48 @@ After deployment, verify your contracts are working by:
 2. Placing a test order to ensure the encryption and queue system works
 3. Performing a swap to trigger order evaluation
 
+## 🖥 Frontend Setup
+
+### Prerequisites
+
+- Node.js 16+
+- Access to Arbitrum Sepolia testnet
+
+### Running the Frontend
+
+1. **Navigate to the client directory**
+   ```bash
+   cd client
+   ```
+
+2. **Set up environment variables**
+
+   Create a `.env` file in the `client` directory with the following variables:
+   ```bash
+   VITE_PRIVATE_KEY=your_private_key_here
+   VITE_PROVIDER_RPC_URL=https://sepolia-rollup.arbitrum.io/rpc
+   ```
+
+   **Note**: The RPC URL should point to Arbitrum Sepolia as that's where the contracts are deployed.
+
+3. **Install dependencies and start the development server**
+   ```bash
+   npm install
+   npm run dev
+   ```
+
+4. **Access the application**
+
+   The frontend will be available at `http://localhost:5173` (or the port shown in your terminal).
+
+## 📍 Deployment Addresses
+
+### Arbitrum Sepolia Testnet
+
+| Contract | Address | Explorer |
+|----------|---------|----------|
+| Susanoo Hook | `0x569b28A558D1229E172E77202D580052179d10c0` | [View on Arbiscan](https://sepolia.arbiscan.io/address/0x569b28a558d1229e172e77202d580052179d10c0) |
+
 ### Order Placement Example
 
 ```javascript
@@ -294,8 +336,7 @@ We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.
 
 - [Fhenix Network](https://fhenix.io)
 - [Uniswap V4 Documentation](https://docs.uniswap.org/contracts/v4/overview)
-- [Project Documentation](./docs/)
-- [Live Demo](https://susanoo-demo.vercel.app)
+- [Live Demo](https://lucky-toffee-a797fa.netlify.app)
 
 ---
 

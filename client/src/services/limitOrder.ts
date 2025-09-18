@@ -396,7 +396,7 @@ export class LimitOrder {
       const contract = new Contract(tokenAddress, ERC20_ABI, signer);
       const approveTx = await contract.approve(HOOK_ADDRESS, MaxUint256);
 
-      const receipt = await approveTx.wait();
+      await approveTx.wait();
       console.log("Successfully gave approval");
     } catch (error) {
       console.error("Error fetching token info:", error);

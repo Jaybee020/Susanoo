@@ -2,12 +2,10 @@ import { LimitOrder, OrderCreationParams } from "./limitOrder";
 import { cofheService } from "./cofheService";
 import {
   HOOK_ADDRESS,
-  PRIVATE_KEY,
   PROVIDER_RPC_URL,
 } from "../utils/constants";
-import { JsonRpcProvider, MaxUint256 } from "ethers";
+import { JsonRpcProvider } from "ethers";
 import { Contract } from "ethers";
-import { Wallet } from "ethers";
 
 class OrderService {
   private limitOrder: LimitOrder | null = null;

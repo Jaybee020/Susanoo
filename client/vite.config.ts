@@ -15,10 +15,8 @@ export default defineConfig({
       'Cross-Origin-Embedder-Policy': 'require-corp',
       'Cross-Origin-Opener-Policy': 'same-origin',
     },
-    mimeTypes: {
-      '.wasm': 'application/wasm',
-    },
   },
+  assetsInclude: ['**/*.wasm'],
   define: {
     global: 'globalThis',
   },
