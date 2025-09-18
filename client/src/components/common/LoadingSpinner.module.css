@@ -1,0 +1,67 @@
+.spinner {
+  display: inline-block;
+  position: relative;
+}
+
+.spinner div {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #646cff;
+  animation: spinner 1.2s linear infinite;
+}
+
+.spinner.small div {
+  width: 4px;
+  height: 4px;
+}
+
+.spinner.medium div {
+  width: 6px;
+  height: 6px;
+}
+
+.spinner.large div {
+  width: 8px;
+  height: 8px;
+}
+
+.spinner.small {
+  width: 24px;
+  height: 24px;
+}
+
+.spinner.medium {
+  width: 32px;
+  height: 32px;
+}
+
+.spinner.large {
+  width: 40px;
+  height: 40px;
+}
+
+.dot1 {
+  left: 8px;
+  animation-delay: 0s;
+}
+
+.dot2 {
+  left: 8px;
+  animation-delay: -0.4s;
+}
+
+.dot3 {
+  left: 32px;
+  animation-delay: -0.8s;
+}
+
+@keyframes spinner {
+  0% {
+    transform: scale(0);
+  }
+  100% {
+    transform: scale(1);
+  }
+}

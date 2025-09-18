@@ -1,13 +1,17 @@
-# Susanoo: Encrypted Limit Order Hook for Uniswap V4
+# Susanoo(Janus): Encrypted Limit Order Hook for Uniswap V4
 
-![Susanoo Banner](https://i.imgur.com/placeholder.png)
-*Visual representation of encrypted orders protecting trader intent*
+![Susanoo Banner](https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQLTdEvqP99jPnvvdc0QdpG0iWDli75N25A1g&s)
+
 
 ## 🏆 Overview
 
-Susanoo is a groundbreaking Uniswap V4 hook that implements fully private limit orders using Fully Homomorphic Encryption (FHE). This revolutionary approach allows traders to place take-profit and stop-loss orders without revealing their strategies to the network, solving one of DeFi's most persistent problems: MEV exploitation through strategy visibility.
+Susanoo(Janus) is a groundbreaking Uniswap V4 hook that implements fully private limit orders using Fully Homomorphic Encryption (FHE). This revolutionary approach allows traders to place take-profit and stop-loss orders without revealing their strategies to the network, solving one of DeFi's most persistent problems: MEV exploitation through strategy visibility.
+
+**Problem Solved**: Traditional limit orders on chain would need their prices and logic directly on chain hereby reducing trade alpha and exposing degen traders to MEV.
 
 **Key Innovation**: First implementation of encrypted conditional trading logic that executes only when hidden conditions are met, without ever exposing those conditions to the public blockchain.
+
+
 
 ## 🔐 Partner Integration
 
@@ -87,22 +91,22 @@ struct Order {
 
 ## 🚀 Unique Value Proposition
 
-### Originality (Novelty Score: 5/5)
+### Originality
 
 - First FHE-based limit order hook in Uniswap ecosystem
 - Novel encrypted condition paradigm - conditions remain hidden even during evaluation
 - Zero-strategy-leakage design - completely new approach to AMM order types
 
-### Unique Execution (Execution Score: 5/5)
+### Unique Execution 
 
 - Dual-phase decryption system: Condition checking → Amount execution
 - Tick offset encryption scheme: Adapts FHE to Uniswap V3/V4 tick system
 - Asynchronous yet atomic execution: Maintains Uniswap safety guarantees
 - Gas-optimized queue processing: Efficient FHE operation batching
 
-### Impact (Impact Score: 5/5)
+### Impact
 
-- Democratizes trading strategies: Retail traders protected from MEV
+- Democratizes trading strategies: Retail traders protected from MEV and trade alpha is preserved.
 - Enables institutional DeFi: Large orders without signaling risk
 - Protects liquidity providers: Prevents predatory trading around known liquidity
 - Advances privacy-preserving DeFi: Sets new standard for on-chain privacy
@@ -175,6 +179,67 @@ forge build
 forge test -vvv
 ```
 
+## 🚀 Deployment Guide
+
+### Local Anvil Deployment
+
+1. **Start Anvil**
+   ```bash
+   anvil
+   ```
+
+2. **Deploy to Local Anvil**
+   ```bash
+   forge script script/Anvil.s.sol --broadcast --private-key <YOUR_PRIVATE_KEY>
+   ```
+
+   This will deploy the complete Susanoo ecosystem and output the contract addresses. Example output:
+   ```
+   Currency currency0 = Currency.wrap(0x95401dc811bb5740090279Ba06cfA8fcF6113778);
+   Currency currency1 = Currency.wrap(0x998abeb3E57409262aE5b751f60747921B33613E);
+   Pool initialized
+   Liquidity added
+
+   Susanoo ecosystem deployed successfully!
+
+   Update Config.sol with these addresses:
+   PoolManager poolManager = IPoolManager(0x84eA74d481Ee0A5332c457a4d796187F6Ba67fEB);
+   IHooks hookContract = IHooks(0x303C5560eb3229fe2b73f920513aDAAaba1a90c0);
+   IPositionManager posm = IPositionManager(0xa82fF9aFd8f496c3d6ac40E2a0F282E47488CFc9);
+
+   Router addresses for scripts:
+   PoolSwapTest swapRouter = PoolSwapTest(0x851356ae760d987E095750cCeb3bC6014560891C);
+   ```
+
+3. **Update Configuration**
+
+   Copy the output addresses to your `script/base/Config.sol` file for future interactions.
+
+### Testnet Deployment
+
+1. **Set Environment Variables**
+   ```bash
+   export RPC_URL="your_testnet_rpc_url"
+   export PRIVATE_KEY="your_private_key"
+   ```
+
+2. **Deploy to Testnet**
+   ```bash
+   forge script script/TestnetDeploy.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_KEY --broadcast
+   ```
+
+3. **Save Configuration**
+
+   Update your `script/base/Config.sol` file with the deployed addresses for future testnet interactions.
+
+### Verification
+
+After deployment, verify your contracts are working by:
+
+1. Checking the deployed hook contract has the correct permissions
+2. Placing a test order to ensure the encryption and queue system works
+3. Performing a swap to trigger order evaluation
+
 ### Order Placement Example
 
 ```javascript
@@ -199,20 +264,6 @@ await susanooContract.placeOrder(
 );
 ```
 
-## 🧪 Testing
-
-### Running Tests
-
-```bash
-# Run all tests
-forge test
-
-# Run specific test file
-forge test --match-path script/Susanoo.t.sol
-
-# Run with verbose output
-forge test -vvv --match-test testMemeTraderTakeProfit
-```
 
 ### Test Coverage
 

@@ -1,0 +1,80 @@
+.poolValidator {
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid #333;
+  background-color: #1a1a1a;
+}
+
+.validating {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #ccc;
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #333;
+  border-top: 2px solid #646cff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error {
+  color: #ff6b6b;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.poolInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.validationStatus {
+  font-weight: 500;
+}
+
+.valid {
+  color: #51cf66;
+}
+
+.invalid {
+  color: #ff6b6b;
+}
+
+.poolDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem;
+  background-color: #0f0f0f;
+  border-radius: 6px;
+  border: 1px solid #333;
+}
+
+.detail {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.label {
+  color: #ccc;
+  font-size: 0.9rem;
+}
+
+.value {
+  color: white;
+  font-family: monospace;
+  font-size: 0.9rem;
+}

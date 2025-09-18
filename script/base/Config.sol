@@ -13,11 +13,11 @@ abstract contract Config is Constants {
     // Set these addresses for your specific deployment
 
     // Hook contract address (will be set after deployment)
-    IHooks hookContract = IHooks(address(0x303C5560eb3229fe2b73f920513aDAAaba1a90c0)); // UPDATE THIS AFTER HOOK DEPLOYMENT
+    IHooks hookContract = IHooks(address(0x569b28A558D1229E172E77202D580052179d10c0)); // UPDATE THIS AFTER HOOK DEPLOYMENT
 
     // Token addresses (set after token deployment or use existing tokens)
-    Currency currency0 = Currency.wrap(address(0x95401dc811bb5740090279Ba06cfA8fcF6113778)); // TOKEN0 ADDRESS (should be < TOKEN1)
-    Currency currency1 = Currency.wrap(address(0x998abeb3E57409262aE5b751f60747921B33613E)); // TOKEN1 ADDRESS (should be > TOKEN0)
+    Currency currency0 = Currency.wrap(address(0x812650b7B982ca7b7DA11eF2e901502Cf9F0F033)); // TOKEN0 ADDRESS (should be < TOKEN1)
+    Currency currency1 = Currency.wrap(address(0xA31b26459050A4832EC58eBAa03147941e612c5a)); // TOKEN1 ADDRESS (should be > TOKEN0)
 
     // =========== COMPUTED VALUES ===========
     // These are computed from the currencies above

@@ -1,0 +1,27 @@
+.tokenBalance {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background-color: #0f0f0f;
+  border: 1px solid #333;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.label {
+  color: #ccc;
+}
+
+.balance {
+  font-family: monospace;
+  font-weight: 500;
+}
+
+.loading {
+  color: #646cff;
+}
+
+.error {
+  color: #ff6b6b;
+}

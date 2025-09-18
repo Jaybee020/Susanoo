@@ -14,6 +14,7 @@ import {TickMath} from "v4-core/libraries/TickMath.sol";
 import {Constants} from "./base/Constants.sol";
 import {Susanoo} from "../src/Susanoo.sol";
 import {MockToken} from "../src/MockToken.sol";
+import {ModifyLiquidityParams} from "v4-core/types/PoolOperation.sol";
 
 /// @notice Testnet deployment script for Susanoo ecosystem
 contract TestnetDeployScript is Script, Constants {
@@ -52,7 +53,7 @@ contract TestnetDeployScript is Script, Constants {
 
     function run() external returns (DeploymentAddresses memory addresses) {
         // Verify deployer has sufficient balance
-        require(msg.sender.balance > 0.1 ether, "Insufficient ETH balance for deployment");
+        // require(msg.sender.balance > 0.1 ether, "Insufficient ETH balance for deployment");
 
         vm.startBroadcast();
         // 1. Deploy Susanoo Hook
@@ -118,8 +119,6 @@ contract TestnetDeployScript is Script, Constants {
         console.log("   Minted", INITIAL_SUPPLY / 1e18, "tokens each to deployer");
     }
 
-    
-
     function initializePool(address hook, address token0, address token1) internal returns (PoolId poolId) {
         PoolKey memory poolKey = PoolKey({
             currency0: Currency.wrap(token0),
@@ -137,6 +136,20 @@ contract TestnetDeployScript is Script, Constants {
         console.log("   Pool Fee:", LP_FEE);
         console.log("   Tick Spacing:", uint256(uint24(TICK_SPACING)));
         console.log("   Starting Price:", STARTING_PRICE);
+
+        // // Add full range liquidity to the pool
+        int24 tickLower = TickMath.minUsableTick(TICK_SPACING);
+        int24 tickUpper = TickMath.maxUsableTick(TICK_SPACING);
+
+        //give full approval
+        MockToken(token0).approve(address(lpRouter), type(uint256).max);
+        MockToken(token1).approve(address(lpRouter), type(uint256).max);
+        // Add liquidity using both routers for demonstration
+        ModifyLiquidityParams memory liqParams = ModifyLiquidityParams(tickLower, tickUpper, 100 ether, 0);
+        lpRouter.modifyLiquidity(poolKey, liqParams, "");
+
+        // // Also add via position manager
+        // posm.mint(poolKey, tickLower, tickUpper, 100e18, 10_000e18, 10_000e18, msg.sender, block.timestamp + 300, "");
     }
 
     function printDeploymentSummary(DeploymentAddresses memory addresses) internal view {

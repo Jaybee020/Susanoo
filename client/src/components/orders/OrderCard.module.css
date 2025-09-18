@@ -1,0 +1,214 @@
+.orderCard {
+  background-color: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  transition: all 0.2s ease;
+}
+
+.orderCard:hover {
+  border-color: #646cff;
+  box-shadow: 0 4px 12px rgba(100, 108, 255, 0.1);
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #333;
+}
+
+.orderInfo {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.orderId {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.status {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.orderMeta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+}
+
+.timestamp {
+  color: #888;
+  font-size: 0.875rem;
+}
+
+.cardBody {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+.orderDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.detailRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+}
+
+.label {
+  color: #ccc;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.value {
+  color: #fff;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.875rem;
+  text-align: right;
+}
+
+.encryptedSection {
+  background-color: #0d1117;
+  border: 1px solid #21262d;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.encryptedHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.encryptedHeader h4 {
+  margin: 0;
+  color: #f0f6fc;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.decryptButton {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.decryptButton:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(240, 147, 251, 0.3);
+}
+
+.decryptButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.decryptedData {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.decryptedData .detailRow {
+  padding: 0.25rem 0;
+  border-bottom: 1px solid #21262d;
+}
+
+.decryptedData .detailRow:last-child {
+  border-bottom: none;
+}
+
+.encryptedPlaceholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  text-align: center;
+  color: #8b949e;
+  font-size: 0.875rem;
+}
+
+.encryptedPlaceholder span:first-child {
+  font-weight: 500;
+}
+
+.encryptedPlaceholder span:last-child {
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .cardBody {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .cardHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .orderInfo {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .orderMeta {
+    align-items: flex-start;
+  }
+
+  .detailRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+
+  .value {
+    text-align: left;
+  }
+
+  .encryptedHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .decryptButton {
+    width: 100%;
+    justify-content: center;
+  }
+}

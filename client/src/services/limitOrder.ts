@@ -1,17 +1,16 @@
-import { ethers } from "ethers";
-import { cofhejs, Encryptable, FheTypes } from "cofhejs/node";
-import { Provider } from "ethers";
-
-export enum OrderStatus {
-  Placed = 0,
-  Executed = 1,
-  Cancelled = 2,
-}
-
-export enum OrderType {
-  TakeProfit = 1,
-  StopLoss = 0,
-}
+import { ethers, MaxUint256 } from "ethers";
+import { cofheService } from "./cofheService";
+import {
+  OrderStatus,
+  OrderType,
+  HOOK_ADDRESS,
+  PROVIDER_RPC_URL,
+  PRIVATE_KEY,
+} from "../utils/constants";
+import { JsonRpcProvider } from "ethers";
+import { Wallet } from "ethers";
+import SusanooABI from "../utils/abi.json";
+import { Contract } from "ethers";
 
 export interface PoolKey {
   currency0: string;
@@ -56,78 +55,77 @@ export interface OrderEditParams {
 }
 
 export class LimitOrder {
-  private provider: ethers.Provider;
-  private signer: ethers.Signer;
-  private contract: ethers.Contract;
+  private provider;
+  private contractAddress: string;
 
   // Susanoo contract ABI (essential functions only)
-  private static readonly ABI = [
-    "function placeOrder(tuple(address currency0, address currency1, uint24 fee, int24 tickSpacing, address hooks) key, bool zeroForOne, tuple(uint256 securityZone, bytes ciphertext) inTriggerTick, tuple(uint256 securityZone, bytes ciphertext) inOrderType, uint256 amount) external returns (uint256)",
-    "function editOrder(tuple(address currency0, address currency1, uint24 fee, int24 tickSpacing, address hooks) key, uint256 orderId, tuple(uint256 securityZone, bytes ciphertext) inNewTriggerTick, int256 amountDelta) external",
-    "function orders(uint256) external view returns (address trader, bool zeroForOne, uint8 status, uint256 orderType, uint256 triggerTick, uint256 amount, bytes32 keyId)",
-    "function nextOrderId() external view returns (uint256)",
-    "function getQueueLength(tuple(address currency0, address currency1, uint24 fee, int24 tickSpacing, address hooks) key) external view returns (uint256)",
-    "event OrderPlaced(uint256 orderId, address indexed trader, uint256 triggerTick, bool zeroForOne, uint256 orderType, uint256 amount, bytes32 indexed keyId)",
-    "event OrderEdited(uint256 orderId, address indexed trader, uint256 newTriggerTick, uint256 newAmount, bytes32 indexed keyId)",
-    "event OrderExecuted(uint256 orderId, address indexed trader, int24 executedTick, bytes32 indexed keyId)",
-    "event OrderCancelled(uint256 orderId, address indexed trader, bytes32 indexed keyId)",
-  ];
+  private static readonly ABI = SusanooABI.abi;
 
-  // Tick offset constant from Susanoo contract
-  private static readonly TICK_OFFSET = 887272;
-
-  constructor(
-    provider: ethers.Provider,
-    signer: ethers.Signer,
-    contractAddress: string
-  ) {
-    this.provider = provider;
-    this.signer = signer;
-    this.contract = new ethers.Contract(
-      contractAddress,
-      LimitOrder.ABI,
-      signer
-    );
+  constructor(contractAddress: string = HOOK_ADDRESS) {
+    this.provider = cofheService.getProvider();
+    this.contractAddress = contractAddress;
   }
 
   /**
    * Initialize cofhejs for FHE operations
    */
-  async initialize(
-    environment: "LOCAL" | "TESTNET" | "MAINNET" = "TESTNET"
-  ): Promise<void> {
-    await cofhejs.initializeWithEthers({
-      ethersProvider: this.provider,
-      ethersSigner: this.signer,
-      environment,
-    });
+  async initialize(): Promise<void> {
+    await cofheService.initialize();
   }
 
+  getContractWithoutSigner() {
+    return new ethers.Contract(
+      this.contractAddress,
+      LimitOrder.ABI,
+      this.provider
+    );
+  }
+
+  getContract() {
+    const provider = new JsonRpcProvider(PROVIDER_RPC_URL);
+    const signer = new Wallet(PRIVATE_KEY, provider);
+    return new ethers.Contract(this.contractAddress, LimitOrder.ABI, signer);
+  }
   /**
    * Create a new limit order with encrypted trigger tick and order type
    */
   async createOrder(params: OrderCreationParams): Promise<string> {
     try {
-      // Convert tick to uint32 by adding offset (handle negative ticks)
-      const tickWithOffset = params.triggerTick + LimitOrder.TICK_OFFSET;
+      await this.initialize();
 
-      // Encrypt order parameters
-      const encryptedData = await cofhejs.encrypt([
-        Encryptable.uint32(BigInt(tickWithOffset)),
-        Encryptable.bool(params.orderType === OrderType.TakeProfit),
-      ]);
+      // Encrypt order parameters using cofhejs
+      const encryptedData = await cofheService.encryptOrderData(
+        params.triggerTick,
+        params.orderType === OrderType.TakeProfit
+      );
 
-      if (!encryptedData.data) {
+      await this.approveToken(
+        params.zeroForOne ? params.poolKey.currency0 : params.poolKey.currency1
+      );
+
+      if (
+        !encryptedData ||
+        !encryptedData.data ||
+        encryptedData.data.length < 2
+      ) {
         throw new Error("Failed to encrypt order data");
       }
 
+      console.log(
+        encryptedData.data,
+        params.poolKey,
+        params.zeroForOne,
+        params.amount
+      );
+
       // Execute transaction
-      const tx = await this.contract.placeOrder(
+      const tx = await this.getContract().placeOrder(
         params.poolKey,
         params.zeroForOne,
         encryptedData.data[0], // encrypted trigger tick
         encryptedData.data[1], // encrypted order type
-        params.amount
+        params.amount,
+        { gasLimit: 30000000 }
       );
 
       const receipt = await tx.wait();
@@ -135,7 +133,8 @@ export class LimitOrder {
       // Extract order ID from logs
       const orderPlacedEvent = receipt.logs.find((log: any) => {
         try {
-          const parsed = this.contract.interface.parseLog(log);
+          const parsed =
+            this.getContractWithoutSigner().interface.parseLog(log);
           return parsed?.name === "OrderPlaced";
         } catch {
           return false;
@@ -143,7 +142,8 @@ export class LimitOrder {
       });
 
       if (orderPlacedEvent) {
-        const parsed = this.contract.interface.parseLog(orderPlacedEvent);
+        const parsed =
+          this.getContractWithoutSigner().interface.parseLog(orderPlacedEvent);
         if (parsed) {
           return parsed.args.orderId.toString();
         }
@@ -151,7 +151,7 @@ export class LimitOrder {
 
       throw new Error("Order creation failed - no OrderPlaced event found");
     } catch (error) {
-      console.error("Error creating order:", error);
+      console.log("Error creating order:", error);
       throw error;
     }
   }
@@ -161,25 +161,33 @@ export class LimitOrder {
    */
   async editOrder(params: OrderEditParams): Promise<string> {
     try {
-      const newTickWithOffset = params.newTriggerTick
-        ? params.newTriggerTick + LimitOrder.TICK_OFFSET
-        : 0; // If not provided, use 0 (contract will handle)
+      await this.initialize();
+
+      if (!params.newTriggerTick) {
+        throw new Error("New trigger tick is required for order editing");
+      }
 
       // Encrypt new trigger tick
-      const encryptedTriggerTick = await cofhejs.encrypt([
-        Encryptable.uint32(BigInt(newTickWithOffset)),
-      ]);
+      const encryptedData = await cofheService.encryptOrderData(
+        params.newTriggerTick,
+        true
+      );
 
-      if (!encryptedTriggerTick.data) {
+      if (
+        !encryptedData ||
+        !encryptedData.data ||
+        encryptedData.data.length < 1
+      ) {
         throw new Error("Failed to encrypt trigger tick");
       }
 
       // Execute transaction
-      const tx = await this.contract.editOrder(
+      const tx = await this.getContract().editOrder(
         params.poolKey,
         params.orderId,
-        encryptedTriggerTick.data[0],
-        params.amountDelta || 0
+        encryptedData.data[0],
+        params.amountDelta || 0,
+        { gasLimit: 30000000 }
       );
 
       const receipt = await tx.wait();
@@ -195,7 +203,7 @@ export class LimitOrder {
    */
   async getOrder(orderId: string): Promise<Partial<Order>> {
     try {
-      const orderData = await this.contract.orders(orderId);
+      const orderData = await this.getContractWithoutSigner().orders(orderId);
 
       return {
         orderId,
@@ -221,12 +229,12 @@ export class LimitOrder {
     toBlock: number | string = "latest"
   ): Promise<Order[]> {
     try {
-      const filter = this.contract.filters.OrderPlaced(
+      const filter = this.getContractWithoutSigner().filters.OrderPlaced(
         null, // orderId
         traderAddress || null // trader (null means all traders)
       );
 
-      const events = await this.contract.queryFilter(
+      const events = await this.getContractWithoutSigner().queryFilter(
         filter,
         fromBlock,
         toBlock
@@ -269,12 +277,12 @@ export class LimitOrder {
     toBlock: number | string = "latest"
   ): Promise<any[]> {
     try {
-      const filter = this.contract.filters.OrderExecuted(
+      const filter = this.getContractWithoutSigner().filters.OrderExecuted(
         null, // orderId
         traderAddress || null // trader
       );
 
-      const events = await this.contract.queryFilter(
+      const events = await this.getContractWithoutSigner().queryFilter(
         filter,
         fromBlock,
         toBlock
@@ -313,12 +321,12 @@ export class LimitOrder {
     toBlock: number | string = "latest"
   ): Promise<any[]> {
     try {
-      const filter = this.contract.filters.OrderCancelled(
+      const filter = this.getContractWithoutSigner().filters.OrderCancelled(
         null, // orderId
         traderAddress || null // trader
       );
 
-      const events = await this.contract.queryFilter(
+      const events = await this.getContractWithoutSigner().queryFilter(
         filter,
         fromBlock,
         toBlock
@@ -352,7 +360,9 @@ export class LimitOrder {
    */
   async getQueueLength(poolKey: PoolKey): Promise<number> {
     try {
-      const length = await this.contract.getQueueLength(poolKey);
+      const length = await this.getContractWithoutSigner().getQueueLength(
+        poolKey
+      );
       return Number(length);
     } catch (error) {
       console.error("Error fetching queue length:", error);
@@ -365,7 +375,7 @@ export class LimitOrder {
    */
   async getNextOrderId(): Promise<string> {
     try {
-      const nextId = await this.contract.nextOrderId();
+      const nextId = await this.getContractWithoutSigner().nextOrderId();
       return nextId.toString();
     } catch (error) {
       console.error("Error fetching next order ID:", error);
@@ -373,20 +383,24 @@ export class LimitOrder {
     }
   }
 
-  /**
-   * Utility function to create permits for unsealing encrypted data
-   */
-  async createPermit(): Promise<any> {
+  async approveToken(tokenAddress: string) {
+    const ERC20_ABI = [
+      "function symbol() view returns (string)",
+      "function decimals() view returns (uint8)",
+      "function approve(address spender, uint256 value) returns (bool)",
+    ];
+
     try {
-      const userAddress = await this.signer.getAddress();
-      const permit = await cofhejs.createPermit({
-        type: "self",
-        issuer: userAddress,
-      });
-      return permit;
+      const provider = new JsonRpcProvider(PROVIDER_RPC_URL);
+      const signer = new Wallet(PRIVATE_KEY, provider);
+      const contract = new Contract(tokenAddress, ERC20_ABI, signer);
+      const approveTx = await contract.approve(HOOK_ADDRESS, MaxUint256);
+
+      const receipt = await approveTx.wait();
+      console.log("Successfully gave approval");
     } catch (error) {
-      console.error("Error creating permit:", error);
-      throw error;
+      console.error("Error fetching token info:", error);
+      return { symbol: "UNKNOWN", decimals: 18 };
     }
   }
 
@@ -398,35 +412,28 @@ export class LimitOrder {
     encryptedOrderType: any
   ): Promise<{ triggerTick: number; orderType: boolean } | null> {
     try {
-      const permit = await this.createPermit();
+      const result = await cofheService.unsealOrderData(
+        encryptedTriggerTick,
+        encryptedOrderType
+      );
 
-      const [unsealedTriggerTick, unsealedOrderType] = await Promise.all([
-        cofhejs.unseal(
-          encryptedTriggerTick,
-          FheTypes.Uint32,
-          permit.data.issuer,
-          permit.data.getHash()
-        ),
-        cofhejs.unseal(
-          encryptedOrderType,
-          FheTypes.Bool,
-          permit.data.issuer,
-          permit.data.getHash()
-        ),
-      ]);
-
-      if (unsealedTriggerTick.success && unsealedOrderType.success) {
-        return {
-          triggerTick:
-            Number(unsealedTriggerTick.data) - LimitOrder.TICK_OFFSET,
-          orderType: unsealedOrderType.data as boolean,
-        };
-      }
-
-      return null;
+      return result;
     } catch (error) {
       console.error("Error unsealing order data:", error);
       return null;
+    }
+  }
+
+  /**
+   * Create a permit for accessing encrypted data
+   */
+  async createPermit(): Promise<any> {
+    try {
+      const permit = await cofheService.createPermit();
+      return permit;
+    } catch (error) {
+      console.error("Error creating permit:", error);
+      throw error;
     }
   }
 }

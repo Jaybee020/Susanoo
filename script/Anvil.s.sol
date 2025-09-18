@@ -76,6 +76,7 @@ contract SusanooAnvilScript is Script, DeployPermit2 {
         console.log("");
         console.log("Router addresses for scripts:");
         console.log("PoolSwapTest swapRouter = PoolSwapTest(", vm.toString(address(swapRouter)), ");");
+        console.log("LpRouter poolManager = LPRouter(", vm.toString(address(lpRouter)), ");");
     }
 
     function deployPoolManager() internal returns (IPoolManager) {
