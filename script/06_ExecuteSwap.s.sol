@@ -29,10 +29,10 @@ contract ExecuteSwapScript is Script, Constants, Config {
 
     // Swap configuration
     bool zeroForOne = true; // true = sell token0 for token1, false = sell token1 for token0
-    int256 amountSpecified = 1e18; // Amount to swap (5 tokens)
+    int256 amountSpecified = 10e18; // Amount to swap (5 tokens)
 
     // PoolSwapTest Contract address - UPDATE THIS FOR YOUR NETWORK
-    PoolSwapTest swapRouter = PoolSwapTest(address(0x851356ae760d987E095750cCeb3bC6014560891C)); // UPDATE THIS ADDRESS
+    PoolSwapTest swapRouter = PoolSwapTest(address(0xf3A39C86dbd13C45365E57FB90fe413371F65AF8)); // UPDATE THIS ADDRESS
 
     /////////////////////////////////////
 

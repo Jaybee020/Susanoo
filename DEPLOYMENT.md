@@ -70,6 +70,12 @@ abstract contract Config is Constants {
 }
 ```
 
+
+```solidity
+   // PoolSwapTest Contract address - UPDATE THIS FOR YOUR NETWORK in 06_EXECUTE_SWAP
+    PoolSwapTest swapRouter = PoolSwapTest(address(0xf3a39c86dbd13c45365e57fb90fe413371f65af8)); // UPDATE THIS ADDRESS
+````
+
 ---
 
 ## Pool Configuration
