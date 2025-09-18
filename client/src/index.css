@@ -10,7 +10,7 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-image: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQLTdEvqP99jPnvvdc0QdpG0iWDli75N25A1g&s');
+  background-image: url('/images/sasuke.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
