@@ -1,0 +1,5 @@
+{
+  "name": "Susanoo (Janus) - Encrypted Limit Order Hook",
+  "description": "A high-performance DeFi landing page for Susanoo, the first FHE-powered encrypted limit order hook for Uniswap V4, featuring MEV protection and private trading logic.",
+  "requestFramePermissions": []
+}
