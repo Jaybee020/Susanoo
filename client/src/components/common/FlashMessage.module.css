@@ -59,9 +59,9 @@
 
 /* Success style */
 .success {
-  background-color: #d4edda;
-  border: 1px solid #c3e6cb;
-  color: #155724;
+  background-color: #1e3a2e;
+  border: 1px solid #28a745;
+  color: #51cf66;
 }
 
 .success .icon {
@@ -69,14 +69,15 @@
 }
 
 .success .closeButton:hover {
-  background-color: rgba(40, 167, 69, 0.1);
+  background-color: rgba(40, 167, 69, 0.2);
+  color: #fff;
 }
 
 /* Error style */
 .error {
-  background-color: #f8d7da;
-  border: 1px solid #f5c6cb;
-  color: #721c24;
+  background-color: #3a1e1e;
+  border: 1px solid #dc3545;
+  color: #ff6b6b;
 }
 
 .error .icon {
@@ -84,29 +85,31 @@
 }
 
 .error .closeButton:hover {
-  background-color: rgba(220, 53, 69, 0.1);
+  background-color: rgba(220, 53, 69, 0.2);
+  color: #fff;
 }
 
 /* Info style */
 .info {
-  background-color: #d1ecf1;
-  border: 1px solid #bee5eb;
-  color: #0c5460;
+  background-color: #1e2a3a;
+  border: 1px solid #9D75E6;
+  color: #b594f0;
 }
 
 .info .icon {
-  color: #17a2b8;
+  color: #9D75E6;
 }
 
 .info .closeButton:hover {
-  background-color: rgba(23, 162, 184, 0.1);
+  background-color: rgba(157, 117, 230, 0.2);
+  color: #fff;
 }
 
 /* Warning style */
 .warning {
-  background-color: #fff3cd;
-  border: 1px solid #ffeaa7;
-  color: #856404;
+  background-color: #3a2e1e;
+  border: 1px solid #ffc107;
+  color: #ffd43b;
 }
 
 .warning .icon {
@@ -114,5 +117,6 @@
 }
 
 .warning .closeButton:hover {
-  background-color: rgba(255, 193, 7, 0.1);
+  background-color: rgba(255, 193, 7, 0.2);
+  color: #fff;
 }

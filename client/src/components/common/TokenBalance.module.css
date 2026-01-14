@@ -3,23 +3,24 @@
   justify-content: space-between;
   align-items: center;
   padding: 0.75rem 1rem;
-  background-color: #0f0f0f;
-  border: 1px solid #333;
+  background-color: #1a1a1a;
+  border: 1px solid #2a2a2a;
   border-radius: 6px;
   font-size: 0.9rem;
 }
 
 .label {
-  color: #ccc;
+  color: #888;
 }
 
 .balance {
   font-family: monospace;
   font-weight: 500;
+  color: #fff;
 }
 
 .loading {
-  color: #646cff;
+  color: #9D75E6;
 }
 
 .error {

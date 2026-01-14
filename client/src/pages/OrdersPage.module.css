@@ -14,11 +14,12 @@
 .titleSection h1 {
   font-size: 2.5rem;
   margin-bottom: 0.5rem;
-  color: #646cff;
+  color: #fff;
+  font-weight: 700;
 }
 
 .titleSection p {
-  color: #ccc;
+  color: #888;
   font-size: 1.1rem;
   margin-bottom: 1rem;
 }
@@ -36,13 +37,13 @@
 }
 
 .walletAddress {
-  color: #646cff;
+  color: #9D75E6;
   font-family: "JetBrains Mono", monospace;
   font-size: 0.875rem;
-  background-color: #1a1a1a;
+  background-color: #1e1e1e;
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
-  border: 1px solid #333;
+  border: 1px solid #2a2a2a;
 }
 
 .headerActions {
@@ -52,9 +53,9 @@
 }
 
 .refreshButton {
-  background-color: #444;
+  background-color: #1e1e1e;
   color: white;
-  border: none;
+  border: 1px solid #2a2a2a;
   padding: 0.75rem 1rem;
   border-radius: 8px;
   font-weight: 500;
@@ -67,7 +68,8 @@
 }
 
 .refreshButton:hover:not(:disabled) {
-  background-color: #555;
+  background-color: #2a2a2a;
+  border-color: #9D75E6;
   transform: translateY(-1px);
 }
 
@@ -78,19 +80,20 @@
 }
 
 .createButton {
-  background-color: #646cff;
+  background-color: #9D75E6;
   color: white;
   text-decoration: none;
   padding: 0.75rem 1.5rem;
   border-radius: 8px;
-  font-weight: 500;
+  font-weight: 600;
   transition: all 0.2s;
   white-space: nowrap;
 }
 
 .createButton:hover {
-  background-color: #535bf2;
+  background-color: #8a65d4;
   transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(157, 117, 230, 0.3);
   color: white;
 }
 
@@ -104,7 +107,7 @@
 }
 
 .loadingContainer p {
-  color: #ccc;
+  color: #888;
   margin-top: 1rem;
   font-size: 1.1rem;
 }
@@ -112,9 +115,9 @@
 .emptyState {
   text-align: center;
   padding: 4rem 2rem;
-  background-color: #1a1a1a;
+  background-color: #1e1e1e;
   border-radius: 12px;
-  border: 1px solid #333;
+  border: 1px solid #2a2a2a;
 }
 
 .emptyIcon {
@@ -124,8 +127,9 @@
 
 .emptyState h3 {
   margin-bottom: 1rem;
-  color: #ccc;
+  color: #fff;
   font-size: 1.5rem;
+  font-weight: 600;
 }
 
 .emptyState p {
@@ -135,7 +139,7 @@
 }
 
 .createOrderLink {
-  background-color: #646cff;
+  background-color: #9D75E6;
   color: white;
   text-decoration: none;
   padding: 1rem 2rem;
@@ -147,8 +151,9 @@
 }
 
 .createOrderLink:hover {
-  background-color: #535bf2;
+  background-color: #8a65d4;
   transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(157, 117, 230, 0.3);
   color: white;
 }
 
@@ -162,13 +167,14 @@
   align-items: center;
   margin-bottom: 2rem;
   padding-bottom: 1rem;
-  border-bottom: 1px solid #333;
+  border-bottom: 1px solid #2a2a2a;
 }
 
 .ordersHeader h2 {
   color: #fff;
   font-size: 1.5rem;
   margin: 0;
+  font-weight: 600;
 }
 
 .orderStats {
@@ -177,7 +183,7 @@
 }
 
 .stat {
-  color: #ccc;
+  color: #888;
   font-size: 0.875rem;
   font-weight: 500;
 }

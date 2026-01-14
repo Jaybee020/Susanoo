@@ -20,16 +20,18 @@
 
 .input {
   padding: 0.75rem;
-  background-color: #1a1a1a;
-  border: 1px solid #333;
+  background-color: #1e1e1e;
+  border: 1px solid #2a2a2a;
   border-radius: 6px;
   color: white;
   font-size: 1rem;
+  transition: all 0.2s;
 }
 
 .input:focus {
-  border-color: #646cff;
+  border-color: #9D75E6;
   outline: none;
+  box-shadow: 0 0 0 3px rgba(157, 117, 230, 0.1);
 }
 
 .error {
@@ -48,14 +50,16 @@
   gap: 0.5rem;
   cursor: pointer;
   padding: 0.5rem 1rem;
-  border: 1px solid #333;
+  border: 1px solid #2a2a2a;
   border-radius: 6px;
-  background-color: #1a1a1a;
+  background-color: #1e1e1e;
   transition: all 0.2s;
+  flex: 1;
 }
 
 .radioLabel:hover {
-  border-color: #646cff;
+  border-color: #9D75E6;
+  background-color: #2a2a2a;
 }
 
 .radioLabel input[type="radio"] {
@@ -63,7 +67,17 @@
 }
 
 .radioLabel input[type="radio"]:checked + span {
-  color: #646cff;
+  color: #9D75E6;
+  font-weight: 600;
+}
+
+.radioLabel input[type="radio"]:checked ~ span {
+  color: #9D75E6;
+}
+
+.radioLabel:has(input[type="radio"]:checked) {
+  border-color: #9D75E6;
+  background-color: rgba(157, 117, 230, 0.1);
 }
 
 .percentageGrid {
@@ -79,16 +93,18 @@
   gap: 0.25rem;
   cursor: pointer;
   padding: 0.5rem;
-  border: 1px solid #333;
+  border: 1px solid #2a2a2a;
   border-radius: 6px;
-  background-color: #1a1a1a;
+  background-color: #1e1e1e;
   transition: all 0.2s;
   text-align: center;
   font-size: 0.9rem;
+  color: #ccc;
 }
 
 .percentageLabel:hover {
-  border-color: #646cff;
+  border-color: #9D75E6;
+  background-color: #2a2a2a;
 }
 
 .percentageLabel input[type="radio"] {
@@ -96,26 +112,28 @@
 }
 
 .percentageLabel input[type="radio"]:checked + span {
-  color: #646cff;
-  font-weight: 500;
+  color: #9D75E6;
+  font-weight: 600;
 }
 
-.percentageLabel input[type="radio"]:checked {
-  background-color: #333;
-  border-color: #646cff;
+.percentageLabel:has(input[type="radio"]:checked) {
+  border-color: #9D75E6;
+  background-color: rgba(157, 117, 230, 0.1);
+  color: #9D75E6;
 }
 
 .balances {
   padding: 1.5rem;
-  background-color: #1a1a1a;
-  border: 1px solid #333;
+  background-color: #1e1e1e;
+  border: 1px solid #2a2a2a;
   border-radius: 8px;
 }
 
 .balances h3 {
   margin-bottom: 1rem;
-  color: #ccc;
+  color: #fff;
   font-size: 1rem;
+  font-weight: 600;
 }
 
 .balanceGrid {
@@ -123,14 +141,57 @@
   gap: 0.75rem;
 }
 
+.poolInfoGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.poolInfoItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.infoLabel {
+  color: #888;
+  font-size: 0.875rem;
+}
+
+.infoValue {
+  color: #fff;
+  font-family: monospace;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.defaultButton {
+  margin-top: 0.5rem;
+  padding: 0.5rem 1rem;
+  background-color: #1e1e1e;
+  border: 1px solid #2a2a2a;
+  color: #9D75E6;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.defaultButton:hover {
+  background-color: #2a2a2a;
+  border-color: #9D75E6;
+}
+
 .submitButton {
   padding: 1rem 2rem;
-  background-color: #646cff;
+  background-color: #9D75E6;
   border: none;
   border-radius: 8px;
   color: white;
   font-size: 1rem;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
   display: flex;
@@ -140,12 +201,13 @@
 }
 
 .submitButton:hover:not(:disabled) {
-  background-color: #535bf2;
+  background-color: #8a65d4;
   transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(157, 117, 230, 0.3);
 }
 
 .submitButton:disabled {
-  background-color: #333;
+  background-color: #2a2a2a;
   color: #666;
   cursor: not-allowed;
   transform: none;

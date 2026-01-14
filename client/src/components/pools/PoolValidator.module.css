@@ -2,22 +2,22 @@
   margin-top: 1rem;
   padding: 1rem;
   border-radius: 8px;
-  border: 1px solid #333;
-  background-color: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  background-color: #1e1e1e;
 }
 
 .validating {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: #ccc;
+  color: #888;
 }
 
 .spinner {
   width: 16px;
   height: 16px;
-  border: 2px solid #333;
-  border-top: 2px solid #646cff;
+  border: 2px solid #2a2a2a;
+  border-top: 2px solid #9D75E6;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -57,9 +57,9 @@
   flex-direction: column;
   gap: 0.5rem;
   padding: 1rem;
-  background-color: #0f0f0f;
+  background-color: #1a1a1a;
   border-radius: 6px;
-  border: 1px solid #333;
+  border: 1px solid #2a2a2a;
 }
 
 .detail {
@@ -69,7 +69,7 @@
 }
 
 .label {
-  color: #ccc;
+  color: #888;
   font-size: 0.9rem;
 }
 

@@ -22,7 +22,7 @@ const OrderCard: React.FC<OrderCardProps> = ({ order }) => {
   const getStatusColor = (status: number) => {
     switch (status) {
       case 0: // Placed
-        return "#646cff";
+        return "#9D75E6";
       case 1: // Executed
         return "#28a745";
       case 2: // Cancelled
