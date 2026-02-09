@@ -48,7 +48,7 @@ class CofheService {
         issuer: signerAddr,
       });
       const permission = cofhejs.getPermit();
-      console.log("permission", permission);
+      console.log("Got permission", permission);
       return permission;
     } catch (error) {
       console.error("Failed to create permit:", error);
@@ -74,7 +74,8 @@ class CofheService {
     try {
       const permit = await this.createPermit();
 
-      console.log("permit", permit);
+      console.log("permit for unsealing", permit);
+      console.log(sealedData);
 
       const unsealed = await cofhejs.unseal(
         sealedData,
@@ -82,7 +83,7 @@ class CofheService {
         permit.data?.issuer,
         permit.data?.getHash()
       );
-      console.log("unsealed", unsealed);
+      console.log("unsealed", unsealed, expectedType);
       return unsealed;
     } catch (error) {
       console.log("Failed to unseal data:", error);

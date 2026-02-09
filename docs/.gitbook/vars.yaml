@@ -1,0 +1,5 @@
+project_name: Susanoo
+hook_address: "0x569b28A558D1229E172E77202D580052179d10c0"
+network: Arbitrum Sepolia
+github_repo: https://github.com/your-org/susanoo
+live_demo: https://lucky-toffee-a797fa.netlify.app

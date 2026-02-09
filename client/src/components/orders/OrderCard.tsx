@@ -16,7 +16,9 @@ interface DecryptedData {
 
 const OrderCard: React.FC<OrderCardProps> = ({ order }) => {
   const [isDecrypting, setIsDecrypting] = useState(false);
-  const [decryptedData, setDecryptedData] = useState<DecryptedData | null>(null);
+  const [decryptedData, setDecryptedData] = useState<DecryptedData | null>(
+    null
+  );
   const { showSuccess, showError } = useFlashMessage();
 
   const getStatusColor = (status: number) => {
@@ -52,6 +54,7 @@ const OrderCard: React.FC<OrderCardProps> = ({ order }) => {
     }
 
     setIsDecrypting(true);
+    console.log(order);
     try {
       const result = await orderService.decryptOrder(
         order.triggerTick,
@@ -170,7 +173,9 @@ const OrderCard: React.FC<OrderCardProps> = ({ order }) => {
             <div className={styles.decryptedData}>
               <div className={styles.detailRow}>
                 <span className={styles.label}>Trigger Tick:</span>
-                <span className={styles.value}>{decryptedData.triggerTick}</span>
+                <span className={styles.value}>
+                  {decryptedData.triggerTick}
+                </span>
               </div>
               <div className={styles.detailRow}>
                 <span className={styles.label}>Order Type:</span>
