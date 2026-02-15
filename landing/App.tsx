@@ -1,12 +1,10 @@
 import React from "react";
-import { FAQ } from "./sections/FAQ";
-import { Hero } from "./sections/Hero";
-import { Navbar } from "./sections/Navbar";
-import { Footer } from "./sections/Footer";
-import { Features } from "./sections/Features";
-import { HowItWorks } from "./sections/HowItWorks";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { PRIMARY_COLOR } from "./constants/colors";
-import { PerformanceBenchmarks } from "./sections/PerformanceBenchmarks";
+import { HomePage } from "./pages/HomePage";
+import { ArticlePage } from "./pages/ArticlePage";
+import { NotFoundPage } from "./pages/NotFoundPage";
+import { ScrollToHash } from "./pages/ScrollToHash";
 
 export default function App() {
   return (
@@ -18,14 +16,14 @@ export default function App() {
         } as React.CSSProperties & { "--selection-bg": string }
       }
     >
-      <Navbar />
-      <Hero />
-      <Features />
-      <HowItWorks />
-      <PerformanceBenchmarks />
-      {/* <QuickStart /> */}
-      <FAQ />
-      <Footer />
+      <BrowserRouter>
+        <ScrollToHash />
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/article/:postid" element={<ArticlePage />} />
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </BrowserRouter>
     </div>
   );
 }
