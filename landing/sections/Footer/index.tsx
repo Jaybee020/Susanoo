@@ -9,12 +9,14 @@ export const Footer = () => (
         <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-20">
           <div className="flex flex-col gap-6">
             <a
-              href="#"
+              href="https://x.com/yinka_ganiyu"
+              target="_blank"
+              rel="noreferrer"
               className="text-white/60 hover:text-white transition-colors"
             >
               Support
             </a>
-            <a
+            {/* <a
               href="#"
               className="text-white/60 hover:text-white transition-colors"
             >
@@ -25,26 +27,24 @@ export const Footer = () => (
               className="text-white/60 hover:text-white transition-colors"
             >
               Privacy policy
-            </a>
+            </a> */}
           </div>
           <div className="flex flex-col gap-6">
             <a
-              href="#"
+              href="https://github.com/Jaybee020/Susanoo"
+              target="_blank"
+              rel="noreferrer"
               className="text-white/60 hover:text-white transition-colors"
             >
-              LinkedIn
+              GitHub
             </a>
             <a
-              href="#"
+              href="https://x.com/yinka_ganiyu"
+              target="_blank"
+              rel="noreferrer"
               className="text-white/60 hover:text-white transition-colors"
             >
               X (Twitter)
-            </a>
-            <a
-              href="#"
-              className="text-white/60 hover:text-white transition-colors"
-            >
-              TikTok
             </a>
           </div>
           <div className="lg:col-span-2 hidden lg:block"></div>

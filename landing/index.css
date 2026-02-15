@@ -1,0 +1,6 @@
+/* Intentionally minimal. Most styling lives in `index.html` and Tailwind CDN. */
+
+html {
+  scroll-behavior: smooth;
+}
+

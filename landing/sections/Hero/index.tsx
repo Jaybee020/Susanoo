@@ -1,6 +1,7 @@
 import WebGLImage from "./WebGLImage";
 import { Zap, Lock, ArrowRight } from "lucide-react";
 import { PRIMARY_COLOR, PRIMARY_COLORS } from "../../constants/colors";
+import { Link } from "react-router-dom";
 
 export const Hero = () => (
   <section className="relative pt-32 pb-20 px-6 bg-grid overflow-hidden">
@@ -30,7 +31,10 @@ export const Hero = () => (
           hidden until execution.
         </p>
         <div className="flex flex-wrap gap-4">
-          <button
+          <a
+            href="https://susanoo-app.vercel.app/"
+            target="_blank"
+            rel="noreferrer"
             style={{ backgroundColor: PRIMARY_COLORS.DARK }}
             className="text-white px-8 py-4 rounded-full font-medium flex items-center gap-2 transition-all group"
           >
@@ -39,10 +43,13 @@ export const Hero = () => (
               size={20}
               className="group-hover:translate-x-1 transition-transform"
             />
-          </button>
-          <button className="bg-white/5 hover:bg-white/10 border border-white/10 text-white px-8 py-4 rounded-full font-medium flex items-center gap-2 transition-all">
-            Read Whitepaper
-          </button>
+          </a>
+          <Link
+            to="/article/how-it-works"
+            className="bg-white/5 hover:bg-white/10 border border-white/10 text-white px-8 py-4 rounded-full font-medium flex items-center gap-2 transition-all"
+          >
+            How it works
+          </Link>
         </div>
       </div>
 
