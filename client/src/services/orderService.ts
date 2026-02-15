@@ -119,13 +119,6 @@ class OrderService {
     }
   }
 
-  async connectWallet(): Promise<void> {
-    await cofheService.connectWallet();
-    // Reinitialize after wallet connection
-    this.limitOrder = new LimitOrder(HOOK_ADDRESS);
-    await this.initialize();
-  }
-
   isBrowserEnvironment(): boolean {
     return cofheService.isBrowserEnvironment();
   }

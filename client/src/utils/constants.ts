@@ -1,7 +1,6 @@
 export const HOOK_ADDRESS = "0x569b28a558d1229e172e77202d580052179d10c0";
 export const PROVIDER_RPC_URL =
   import.meta.env.VITE_PROVIDER_RPC_URL || "http://127.0.0.1:8545";
-export const PRIVATE_KEY = import.meta.env.VITE_PRIVATE_KEY;
 export const DEFAULT_DEPLOYED_POOL_ID =
   "0xcb0fa20d5d44e9edfce11efa467cba0827757824efc2d5fcb0e43e4e463ca508";
 export const POOL_MANAGER = "0xFB3e0C6F74eB1a21CC1Da29aeC80D2Dfe6C9a317";

@@ -1,38 +1,17 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { orderService } from "../../services/orderService";
+import { useWallet } from "../../contexts/WalletContext";
 import styles from "./Header.module.css";
 
 const Header: React.FC = () => {
   const location = useLocation();
-  const [walletAddress, setWalletAddress] = useState<string>("");
-  const [isConnecting, setIsConnecting] = useState(false);
-
-  useEffect(() => {
-    loadWalletAddress();
-  }, []);
-
-  const loadWalletAddress = async () => {
-    try {
-      const address = await orderService.getWalletAddress();
-      setWalletAddress(address);
-    } catch (error) {
-      console.error("Failed to load wallet address:", error);
-    }
-  };
+  const { address, isConnected, connect } = useWallet();
+  const [isConnecting, setIsConnecting] = React.useState(false);
 
   const handleConnectWallet = async () => {
-    if (!orderService.isBrowserEnvironment()) {
-      alert(
-        "Wallet connection only available in browser with MetaMask installed"
-      );
-      return;
-    }
-
     setIsConnecting(true);
     try {
-      await orderService.connectWallet();
-      await loadWalletAddress();
+      await connect();
     } catch (error) {
       console.error("Failed to connect wallet:", error);
       alert(
@@ -43,9 +22,9 @@ const Header: React.FC = () => {
     }
   };
 
-  const formatAddress = (address: string) => {
-    if (!address) return "";
-    return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  const formatAddress = (addr: string) => {
+    if (!addr) return "";
+    return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
   };
 
   return (
@@ -71,6 +50,14 @@ const Header: React.FC = () => {
               }`}
             >
               Trade
+            </Link>
+            <Link
+              to="/swap"
+              className={`${styles.navLink} ${
+                location.pathname === "/swap" ? styles.active : ""
+              }`}
+            >
+              Swap
             </Link>
             <Link
               to="/create"
@@ -100,10 +87,10 @@ const Header: React.FC = () => {
             <div className={styles.iconButton}>
               <span>🔔</span>
             </div>
-            {walletAddress ? (
+            {isConnected ? (
               <div className={styles.walletInfo}>
                 <span className={styles.walletAddress}>
-                  {formatAddress(walletAddress)}
+                  {formatAddress(address)}
                 </span>
               </div>
             ) : (

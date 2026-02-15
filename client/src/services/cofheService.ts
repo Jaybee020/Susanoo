@@ -1,35 +1,41 @@
 import { ethers } from "ethers";
 import { cofhejs, Encryptable, FheTypes } from "cofhejs/web";
-import { PRIVATE_KEY, PROVIDER_RPC_URL } from "../utils/constants";
-import { Wallet } from "ethers";
+import { PROVIDER_RPC_URL } from "../utils/constants";
 import { JsonRpcProvider } from "ethers";
 
 class CofheService {
-  private provider: ethers.BrowserProvider | ethers.JsonRpcProvider;
+  private _signer: ethers.Signer | null = null;
+  private _provider: ethers.BrowserProvider | ethers.JsonRpcProvider;
 
   constructor() {
-    this.provider = new JsonRpcProvider(PROVIDER_RPC_URL);
+    this._provider = new JsonRpcProvider(PROVIDER_RPC_URL);
   }
 
-  async getSigner() {
-    const provider = new JsonRpcProvider(PROVIDER_RPC_URL);
-    const signer = new Wallet(PRIVATE_KEY, provider);
-    return signer;
+  setSigner(signer: ethers.Signer, provider: ethers.BrowserProvider) {
+    this._signer = signer;
+    this._provider = provider;
+  }
+
+  async getSigner(): Promise<ethers.Signer> {
+    if (!this._signer) {
+      throw new Error("Wallet not connected. Please connect your wallet first.");
+    }
+    return this._signer;
+  }
+
+  getProvider(): ethers.BrowserProvider | ethers.JsonRpcProvider {
+    return this._provider;
   }
 
   async initialize(): Promise<void> {
-    // if (this.isInitialized) return;
-
     try {
-      const provider = new JsonRpcProvider(PROVIDER_RPC_URL);
-      const signer = new Wallet(PRIVATE_KEY, provider);
+      const signer = await this.getSigner();
       await cofhejs.initializeWithEthers({
-        ethersProvider: this.provider,
+        ethersProvider: this._provider,
         ethersSigner: signer,
         environment: "TESTNET",
       });
 
-      // this.isInitialized = true;
       console.log("FhenixJS initialized successfully");
     } catch (error) {
       console.error("Failed to initialize FhenixJS:", error);
@@ -145,10 +151,6 @@ class CofheService {
     }
   }
 
-  getProvider() {
-    return this.provider;
-  }
-
   async getWalletAddress(): Promise<string> {
     const signer = await this.getSigner();
     return await signer.getAddress();
@@ -158,33 +160,8 @@ class CofheService {
     await this.initialize();
   }
 
-  // Check if we're in a browser environment
   isBrowserEnvironment(): boolean {
     return typeof window !== "undefined" && !!window.ethereum;
-  }
-
-  // Connect to MetaMask or other browser wallet
-  async connectWallet(): Promise<void> {
-    if (!this.isBrowserEnvironment()) {
-      throw new Error("Wallet connection only available in browser");
-    }
-
-    try {
-      // Request account access
-      if (!window.ethereum) {
-        throw new Error("MetaMask not installed");
-      }
-      await window.ethereum.request({ method: "eth_requestAccounts" });
-
-      // Reinitialize with connected wallet
-      this.provider = new ethers.BrowserProvider(window.ethereum);
-      // this.isInitialized = false; // Reset to reinitialize with new signer
-
-      await this.initialize();
-    } catch (error) {
-      console.error("Failed to connect wallet:", error);
-      throw new Error("Wallet connection failed");
-    }
   }
 }
 

@@ -4,11 +4,7 @@ import {
   OrderStatus,
   OrderType,
   HOOK_ADDRESS,
-  PROVIDER_RPC_URL,
-  PRIVATE_KEY,
 } from "../utils/constants";
-import { JsonRpcProvider } from "ethers";
-import { Wallet } from "ethers";
 import SusanooABI from "../utils/abi.json";
 import { Contract } from "ethers";
 
@@ -55,14 +51,12 @@ export interface OrderEditParams {
 }
 
 export class LimitOrder {
-  private provider;
   private contractAddress: string;
 
   // Susanoo contract ABI (essential functions only)
   private static readonly ABI = SusanooABI.abi;
 
   constructor(contractAddress: string = HOOK_ADDRESS) {
-    this.provider = cofheService.getProvider();
     this.contractAddress = contractAddress;
   }
 
@@ -77,13 +71,12 @@ export class LimitOrder {
     return new ethers.Contract(
       this.contractAddress,
       LimitOrder.ABI,
-      this.provider
+      cofheService.getProvider()
     );
   }
 
-  getContract() {
-    const provider = new JsonRpcProvider(PROVIDER_RPC_URL);
-    const signer = new Wallet(PRIVATE_KEY, provider);
+  async getContract() {
+    const signer = await cofheService.getSigner();
     return new ethers.Contract(this.contractAddress, LimitOrder.ABI, signer);
   }
   /**
@@ -119,7 +112,8 @@ export class LimitOrder {
       );
 
       // Execute transaction
-      const tx = await this.getContract().placeOrder(
+      const contract = await this.getContract();
+      const tx = await contract.placeOrder(
         params.poolKey,
         params.zeroForOne,
         encryptedData.data[0], // encrypted trigger tick
@@ -182,7 +176,8 @@ export class LimitOrder {
       }
 
       // Execute transaction
-      const tx = await this.getContract().editOrder(
+      const contract = await this.getContract();
+      const tx = await contract.editOrder(
         params.poolKey,
         params.orderId,
         encryptedData.data[0],
@@ -391,8 +386,7 @@ export class LimitOrder {
     ];
 
     try {
-      const provider = new JsonRpcProvider(PROVIDER_RPC_URL);
-      const signer = new Wallet(PRIVATE_KEY, provider);
+      const signer = await cofheService.getSigner();
       const contract = new Contract(tokenAddress, ERC20_ABI, signer);
       const approveTx = await contract.approve(HOOK_ADDRESS, MaxUint256);
 

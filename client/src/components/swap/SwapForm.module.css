@@ -1,0 +1,161 @@
+.swapForm {
+  background-color: #1e1e1e;
+  border: 1px solid #2a2a2a;
+  border-radius: 12px;
+  padding: 1.5rem;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.formGroup {
+  margin-bottom: 1.25rem;
+}
+
+.label {
+  display: block;
+  color: #888;
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.input {
+  width: 100%;
+  background-color: #141414;
+  border: 1px solid #2a2a2a;
+  color: #fff;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #9d75e6;
+}
+
+.input::placeholder {
+  color: #555;
+}
+
+.directionToggle {
+  display: flex;
+  gap: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #2a2a2a;
+}
+
+.directionBtn {
+  flex: 1;
+  padding: 0.75rem;
+  border: none;
+  background-color: #141414;
+  color: #888;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.directionBtn:hover {
+  background-color: #2a2a2a;
+}
+
+.directionBtnActive {
+  background-color: #9d75e6;
+  color: #fff;
+}
+
+.directionBtnActive:hover {
+  background-color: #8a65d4;
+}
+
+.poolInfoBox {
+  background-color: #141414;
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.poolInfoRow {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.poolInfoRow:last-child {
+  margin-bottom: 0;
+}
+
+.poolInfoLabel {
+  color: #888;
+}
+
+.poolInfoValue {
+  color: #fff;
+  font-family: monospace;
+}
+
+.balances {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.balanceItem {
+  flex: 1;
+  background-color: #141414;
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  padding: 0.75rem;
+  text-align: center;
+}
+
+.balanceLabel {
+  color: #888;
+  font-size: 0.75rem;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.balanceValue {
+  color: #fff;
+  font-size: 0.95rem;
+  font-family: monospace;
+}
+
+.submitBtn {
+  width: 100%;
+  padding: 0.875rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  background-color: #9d75e6;
+  color: #fff;
+}
+
+.submitBtn:hover:not(:disabled) {
+  background-color: #8a65d4;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(157, 117, 230, 0.3);
+}
+
+.submitBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.errorText {
+  color: #ff6b6b;
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+}
