@@ -26,7 +26,9 @@ function ArticleSection({
 
 export function ArticlePage() {
   const { postid } = useParams();
-  const article = postid ? ARTICLES[postid] : undefined;
+  const article = postid
+    ? ARTICLES[postid?.toLowerCase() as keyof typeof ARTICLES]
+    : undefined;
 
   if (!article) {
     return (
@@ -80,14 +82,6 @@ export function ArticlePage() {
             </div>
           </header>
 
-          <div className="mt-10 rounded-2xl border border-white/10 bg-white/5 px-6 py-5 text-white/70">
-            Want the short architecture overview instead?{" "}
-            <Link to="/#how-it-works" className="text-white underline">
-              Jump to the landing page section
-            </Link>
-            .
-          </div>
-
           {article.sections.map((s) => (
             <ArticleSection key={s.id} id={s.id} title={s.title}>
               {s.content}
@@ -104,4 +98,3 @@ export function ArticlePage() {
     </>
   );
 }
-
