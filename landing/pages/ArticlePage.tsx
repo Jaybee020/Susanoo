@@ -1,5 +1,6 @@
 import React from "react";
 import { Link, useParams } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { Navbar } from "../sections/Navbar";
 import { ARTICLES } from "../content/articles";
 
@@ -33,6 +34,10 @@ export function ArticlePage() {
   if (!article) {
     return (
       <>
+        <Helmet>
+          <title>Article not found | Susanoo</title>
+          <meta name="robots" content="noindex" />
+        </Helmet>
         <Navbar />
         <main className="px-6 pt-32 pb-24">
           <div className="max-w-[900px] mx-auto">
@@ -58,6 +63,14 @@ export function ArticlePage() {
 
   return (
     <>
+      <Helmet>
+        <title>{`${article.title} | Susanoo`}</title>
+        <meta name="description" content={article.description} />
+        <meta property="og:title" content={article.title} />
+        <meta property="og:description" content={article.description} />
+        <meta property="og:type" content="article" />
+        <meta name="twitter:card" content="summary_large_image" />
+      </Helmet>
       <Navbar />
       <main className="px-6 pt-32 pb-24">
         <div className="max-w-[900px] mx-auto">

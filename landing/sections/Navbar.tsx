@@ -35,11 +35,19 @@ export const Navbar = () => {
               <a href="#metrics" className="hover:text-white transition-colors">
                 Performance
               </a>
+              <Link to="/articles" className="hover:text-white transition-colors">
+                Articles
+              </Link>
             </>
           ) : (
-            <Link to="/" className="hover:text-white transition-colors">
-              Home
-            </Link>
+            <>
+              <Link to="/" className="hover:text-white transition-colors">
+                Home
+              </Link>
+              <Link to="/articles" className="hover:text-white transition-colors">
+                Articles
+              </Link>
+            </>
           )}
         </div>
 
