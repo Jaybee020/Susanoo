@@ -15,5 +15,20 @@ export default defineConfig(({ mode }) => {
         "@": path.resolve(__dirname, "."),
       },
     },
+    build: {
+      rollupOptions: {
+        input: {
+          main: path.resolve(__dirname, "index.html"),
+          articleHowItWorks: path.resolve(
+            __dirname,
+            "article/how-it-works/index.html"
+          ),
+          articleIntentLayer: path.resolve(
+            __dirname,
+            "article/intent-layer/index.html"
+          ),
+        },
+      },
+    },
   };
 });

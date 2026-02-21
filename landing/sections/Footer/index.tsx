@@ -1,5 +1,6 @@
 import React from "react";
 import { PixelTransition } from "./PixelTransition";
+import { Link } from "react-router-dom";
 
 export const Footer = () => (
   <>
@@ -8,6 +9,12 @@ export const Footer = () => (
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-20">
           <div className="flex flex-col gap-6">
+            <Link
+              to="/articles"
+              className="text-white/60 hover:text-white transition-colors"
+            >
+              Articles
+            </Link>
             <a
               href="https://x.com/yinka_ganiyu"
               target="_blank"
@@ -16,18 +23,6 @@ export const Footer = () => (
             >
               Support
             </a>
-            {/* <a
-              href="#"
-              className="text-white/60 hover:text-white transition-colors"
-            >
-              Terms of service
-            </a>
-            <a
-              href="#"
-              className="text-white/60 hover:text-white transition-colors"
-            >
-              Privacy policy
-            </a> */}
           </div>
           <div className="flex flex-col gap-6">
             <a

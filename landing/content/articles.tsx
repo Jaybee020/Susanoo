@@ -371,6 +371,6 @@ export const ARTICLES = {
       },
     ],
     footerNote:
-      "Originally published as Susanoo Article 2. Updated here for clarity.",
+      "This article is provided for clarity and education. It may be updated as the protocol evolves.",
   },
 };

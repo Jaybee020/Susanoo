@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#121212" />
+    <title>The Intent Layer Is Broken: Why DeFi Needs Private Execution | Susanoo</title>
+    <meta
+      name="description"
+      content="Transparency taxes serious traders. Susanoo shows why MEV is structural and how private execution unlocks fair liquidations, dark-pool style AMMs, and institutional-grade DeFi."
+    />
+    <link rel="canonical" href="https://usesusanoo.vercel.app/article/intent-layer" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="/logo.svg" type="image/svg+xml" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="article" />
+    <meta property="og:site_name" content="Susanoo" />
+    <meta
+      property="og:title"
+      content="The Intent Layer Is Broken: Why DeFi Needs Private Execution"
+    />
+    <meta
+      property="og:description"
+      content="MEV exploits public intent. Learn why traders keep fleeing to CEXs and how Susanoo brings private execution onchain."
+    />
+    <meta
+      property="og:image"
+      content="https://usesusanoo.vercel.app/og-image.png"
+    />
+    <meta property="og:image:width" content="1300" />
+    <meta property="og:image:height" content="584" />
+    <meta
+      property="og:url"
+      content="https://usesusanoo.vercel.app/article/intent-layer"
+    />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content="The Intent Layer Is Broken: Why DeFi Needs Private Execution"
+    />
+    <meta
+      name="twitter:description"
+      content="MEV isn't an edge case. Susanoo explains why we need private execution primitives to protect intent."
+    />
+    <meta
+      name="twitter:image"
+      content="https://usesusanoo.vercel.app/og-image.png"
+    />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      @font-face {
+        font-family: "Saans";
+        src: url("/fonts/Saans-Light.otf") format("opentype");
+        font-weight: 300;
+        font-style: normal;
+      }
+      @font-face {
+        font-family: "Saans";
+        src: url("/fonts/Saans-Regular.otf") format("opentype");
+        font-weight: 400;
+        font-style: normal;
+      }
+      @font-face {
+        font-family: "Saans";
+        src: url("/fonts/Saans-Medium.otf") format("opentype");
+        font-weight: 500;
+        font-style: normal;
+      }
+      @font-face {
+        font-family: "Saans";
+        src: url("/fonts/Saans-SemiBold.otf") format("opentype");
+        font-weight: 600;
+        font-style: normal;
+      }
+
+      :root {
+        --primary: #b48dff;
+        --background: #121212;
+      }
+
+      ::selection {
+        background-color: var(--primary);
+        color: white;
+      }
+      body {
+        font-family: "Saans", sans-serif;
+        background-color: var(--background);
+        color: #ffffff;
+        margin: 0;
+        overflow-x: hidden;
+        font-weight: 400;
+      }
+      .font-mono {
+        font-family: "JetBrains+Mono", monospace;
+      }
+      .font-heading {
+        font-family: "Saans", sans-serif;
+        font-weight: 600;
+      }
+      .font-bagel {
+        font-family: "Bagel Fat One", cursive;
+      }
+
+      .glow-purple {
+        box-shadow: 0 0 50px -10px rgba(168, 85, 247, 0.3);
+      }
+
+      @keyframes subtle-float {
+        0% {
+          transform: translateY(0px);
+        }
+        50% {
+          transform: translateY(-10px);
+        }
+        100% {
+          transform: translateY(0px);
+        }
+      }
+      .animate-float {
+        animation: subtle-float 6s ease-in-out infinite;
+      }
+
+      .bg-grid {
+        background-size: 40px 40px;
+        background-image: linear-gradient(
+            to right,
+            rgba(255, 255, 255, 0.05) 1px,
+            transparent 1px
+          ),
+          linear-gradient(
+            to bottom,
+            rgba(255, 255, 255, 0.05) 1px,
+            transparent 1px
+          );
+      }
+
+      .gradient-text {
+        background: linear-gradient(135deg, #fff 0%, #a855f7 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #121212;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #333;
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #444;
+      }
+    </style>
+    <link rel="stylesheet" href="/index.css" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
