@@ -1,11 +1,17 @@
 import { ethers } from "ethers";
 import { cofhejs, Encryptable, FheTypes } from "cofhejs/web";
-import { PROVIDER_RPC_URL } from "../utils/constants";
+import {
+  PROVIDER_RPC_URL,
+  ARBITRUM_SEPOLIA_CHAIN_ID,
+  ARBITRUM_SEPOLIA_HEX,
+  ARBITRUM_SEPOLIA_PARAMS,
+} from "../utils/constants";
 import { JsonRpcProvider } from "ethers";
 
 class CofheService {
   private _signer: ethers.Signer | null = null;
   private _provider: ethers.BrowserProvider | ethers.JsonRpcProvider;
+  private _cofhejsInitialized = false;
 
   constructor() {
     this._provider = new JsonRpcProvider(PROVIDER_RPC_URL);
@@ -14,12 +20,40 @@ class CofheService {
   setSigner(signer: ethers.Signer, provider: ethers.BrowserProvider) {
     this._signer = signer;
     this._provider = provider;
+    // New signer means cofhejs must be re-initialized
+    this._cofhejsInitialized = false;
+  }
+
+  async ensureArbitrumSepolia(): Promise<void> {
+    if (!window.ethereum) return;
+    const chainId = await window.ethereum.request({ method: "eth_chainId" });
+    if (parseInt(chainId as string, 16) === ARBITRUM_SEPOLIA_CHAIN_ID) return;
+
+    try {
+      await window.ethereum.request({
+        method: "wallet_switchEthereumChain",
+        params: [{ chainId: ARBITRUM_SEPOLIA_HEX }],
+      });
+    } catch (switchError: any) {
+      // Chain not added — add it then retry
+      if (switchError.code === 4902) {
+        await window.ethereum.request({
+          method: "wallet_addEthereumChain",
+          params: [ARBITRUM_SEPOLIA_PARAMS],
+        });
+      } else {
+        throw new Error("Please switch to Arbitrum Sepolia to continue.");
+      }
+    }
   }
 
   async getSigner(): Promise<ethers.Signer> {
     if (!this._signer) {
-      throw new Error("Wallet not connected. Please connect your wallet first.");
+      throw new Error(
+        "Wallet not connected. Please connect your wallet first.",
+      );
     }
+    await this.ensureArbitrumSepolia();
     return this._signer;
   }
 
@@ -28,6 +62,7 @@ class CofheService {
   }
 
   async initialize(): Promise<void> {
+    if (this._cofhejsInitialized) return;
     try {
       const signer = await this.getSigner();
       await cofhejs.initializeWithEthers({
@@ -35,7 +70,7 @@ class CofheService {
         ethersSigner: signer,
         environment: "TESTNET",
       });
-
+      this._cofhejsInitialized = true;
       console.log("FhenixJS initialized successfully");
     } catch (error) {
       console.error("Failed to initialize FhenixJS:", error);
@@ -54,7 +89,7 @@ class CofheService {
         issuer: signerAddr,
       });
       const permission = cofhejs.getPermit();
-      console.log("Got permission", permission);
+      console.log("Got permission", permission, signerAddr);
       return permission;
     } catch (error) {
       console.error("Failed to create permit:", error);
@@ -80,17 +115,22 @@ class CofheService {
     try {
       const permit = await this.createPermit();
 
-      console.log("permit for unsealing", permit);
-      console.log(sealedData);
-
-      const unsealed = await cofhejs.unseal(
+      const result = await cofhejs.unseal(
         sealedData,
         expectedType,
         permit.data?.issuer,
-        permit.data?.getHash()
+        permit.data?.getHash(),
       );
-      console.log("unsealed", unsealed, expectedType);
-      return unsealed;
+
+      if (result && typeof result === "object" && "success" in result) {
+        if (!result.success) {
+          throw result.error ?? new Error("Unseal failed");
+        }
+        return result.data;
+      }
+
+      // Older API — result is the value directly
+      return result;
     } catch (error) {
       console.log("Failed to unseal data:", error);
       throw new Error("Data unsealing failed");
@@ -99,7 +139,7 @@ class CofheService {
 
   async encryptOrderData(
     triggerTick: number,
-    orderType: boolean
+    orderType: boolean,
   ): Promise<any> {
     await this.ensureInitialized();
 
@@ -122,7 +162,7 @@ class CofheService {
 
   async unsealOrderData(
     encryptedTriggerTick: any,
-    encryptedOrderType: any
+    encryptedOrderType: any,
   ): Promise<{ triggerTick: number; orderType: boolean } | null> {
     await this.ensureInitialized();
 
@@ -130,10 +170,15 @@ class CofheService {
       const TICK_OFFSET = 887272;
       console.log(encryptedTriggerTick, encryptedOrderType);
 
-      const [unsealedTriggerTick, unsealedOrderType] = await Promise.all([
-        this.unsealData(encryptedTriggerTick, FheTypes.Uint32),
-        this.unsealData(encryptedOrderType, FheTypes.Bool),
-      ]);
+      // Sequential — parallel calls race on cofhejs.initializeWithEthers and corrupt state
+      const unsealedTriggerTick = await this.unsealData(
+        encryptedTriggerTick,
+        FheTypes.Uint32,
+      );
+      const unsealedOrderType = await this.unsealData(
+        encryptedOrderType,
+        FheTypes.Bool,
+      );
 
       console.log(unsealedOrderType, unsealedTriggerTick);
 

@@ -1,17 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { orderService } from '../services/orderService';
-import { Order } from '../services/limitOrder';
-import { useFlashMessage } from '../contexts/FlashMessageContext';
-import OrderCard from '../components/orders/OrderCard';
-import LoadingSpinner from '../components/common/LoadingSpinner';
-import TradingTerminal from '../components/trade/TradingTerminal';
-import styles from './OrdersPage.module.css';
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { orderService } from "../services/orderService";
+import { Order } from "../services/limitOrder";
+import { useFlashMessage } from "../contexts/FlashMessageContext";
+import OrderCard from "../components/orders/OrderCard";
+import LoadingSpinner from "../components/common/LoadingSpinner";
+import TradingTerminal from "../components/trade/TradingTerminal";
+import styles from "./OrdersPage.module.css";
 
 const OrdersPage: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [walletAddress, setWalletAddress] = useState<string>('');
+  const [walletAddress, setWalletAddress] = useState<string>("");
   const { showError } = useFlashMessage();
 
   useEffect(() => {
@@ -29,8 +29,8 @@ const OrdersPage: React.FC = () => {
       const userOrders = await orderService.getUserOrders(address);
       setOrders(userOrders);
     } catch (error) {
-      console.error('Error loading orders:', error);
-      showError('Failed to load orders: ' + (error as Error).message);
+      console.error("Error loading orders:", error);
+      showError("Failed to load orders: " + (error as Error).message);
     } finally {
       setIsLoading(false);
     }
@@ -44,7 +44,7 @@ const OrdersPage: React.FC = () => {
     <div className={styles.ordersPage}>
       <TradingTerminal />
 
-      <section className={styles.ordersSection}>
+      {/* <section className={styles.ordersSection}>
         <div className={styles.ordersHeader}>
           <div>
             <p className={styles.sectionKicker}>My Orders</p>
@@ -110,7 +110,7 @@ const OrdersPage: React.FC = () => {
             </div>
           </div>
         )}
-      </section>
+      </section> */}
     </div>
   );
 };

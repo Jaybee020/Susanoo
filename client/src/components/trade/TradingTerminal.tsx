@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   AreaSeries,
   ColorType,
@@ -8,6 +8,7 @@ import {
   UTCTimestamp,
   createChart,
 } from "lightweight-charts";
+import { parseEther } from "ethers";
 import LoadingSpinner from "../common/LoadingSpinner";
 import {
   Candle,
@@ -16,11 +17,22 @@ import {
   PoolTrade,
   relayerService,
 } from "../../services/relayerService";
-import { DEFAULT_DEPLOYED_POOL_ID } from "../../utils/constants";
+import { executeSwap } from "../../services/swapService";
+import { orderService } from "../../services/orderService";
+import { Order } from "../../services/limitOrder";
+import { useWallet } from "../../contexts/WalletContext";
+import { useFlashMessage } from "../../contexts/FlashMessageContext";
+import {
+  DEFAULT_DEPLOYED_POOL_ID,
+  PERCENTAGE_OPTIONS,
+  POOLKEY,
+  OrderType,
+  OrderStatus,
+} from "../../utils/constants";
+import { calculateTargetTick, tickToPrice } from "../../utils/priceConversion";
 import styles from "./TradingTerminal.module.css";
 
 const TIMEFRAMES: CandleTimeframe[] = ["15m", "1h", "4h", "1d"];
-const LEVERAGE_MARKS = [1, 5, 10, 25, 50];
 
 const formatUsd = (value?: number | null, digits = 2) => {
   if (value === undefined || value === null || Number.isNaN(value)) return "--";
@@ -63,11 +75,29 @@ const derivePriceFromPool = (pool?: PoolMarket | null) => {
   }
 };
 
+const formatAmount = (amount: bigint) => {
+  try {
+    return (Number(amount) / Math.pow(10, 18)).toFixed(6);
+  } catch {
+    return amount.toString();
+  }
+};
+
 type PositionTab = "positions" | "openOrders" | "tradeHistory" | "pnl";
 type TradeSide = "buy" | "sell";
-type OrderType = "market" | "limit" | "stop";
+type OrderTabType = "market" | "limit" | "stop";
+
+interface DecryptedData {
+  triggerTick: number;
+  orderType: boolean;
+}
 
 const TradingTerminal: React.FC = () => {
+  // ── Wallet & flash ─────────────────────────────────────
+  const { address, isConnected, connect } = useWallet();
+  const { showSuccess, showError } = useFlashMessage();
+
+  // ── Market data state ───────────────────────────────────
   const [markets, setMarkets] = useState<PoolMarket[]>([]);
   const [selectedPool, setSelectedPool] = useState<string>(DEFAULT_DEPLOYED_POOL_ID);
   const [timeframe, setTimeframe] = useState<CandleTimeframe>("1h");
@@ -76,21 +106,84 @@ const TradingTerminal: React.FC = () => {
   const [isLoadingChart, setIsLoadingChart] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // ── UI tab state ────────────────────────────────────────
   const [activePositionTab, setActivePositionTab] = useState<PositionTab>("positions");
   const [tradeSide, setTradeSide] = useState<TradeSide>("buy");
-  const [orderType, setOrderType] = useState<OrderType>("market");
-  const [leverage, setLeverage] = useState(3);
+  const [orderTabType, setOrderTabType] = useState<OrderTabType>("market");
 
+  // ── Trade form state ────────────────────────────────────
+  const [tradeAmount, setTradeAmount] = useState("");
+  const [limitPrivacyType, setLimitPrivacyType] = useState<"takeProfit" | "stopLoss">("takeProfit");
+  const [limitPercentage, setLimitPercentage] = useState<number | null>(null);
+  const [customLimitPct, setCustomLimitPct] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // ── Orders state ────────────────────────────────────────
+  const [userOrders, setUserOrders] = useState<Order[]>([]);
+  const [isLoadingOrders, setIsLoadingOrders] = useState(false);
+  const [decryptedOrders, setDecryptedOrders] = useState<Map<string, DecryptedData>>(new Map());
+  const [decryptingOrders, setDecryptingOrders] = useState<Set<string>>(new Set());
+
+  // ── Balances ────────────────────────────────────────────
+  const [token0Balance, setToken0Balance] = useState("--");
+  const [token1Balance, setToken1Balance] = useState("--");
+
+  // ── Chart refs ──────────────────────────────────────────
   const chartContainerRef = useRef<HTMLDivElement | null>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<"Area"> | null>(null);
 
+  // ── Derived ─────────────────────────────────────────────
   const activeMarket = useMemo(
     () => markets.find((m) => m.poolId === selectedPool) || null,
     [markets, selectedPool]
   );
 
-  // Load markets
+  const effectiveLimitType = orderTabType === "stop" ? "stopLoss" : limitPrivacyType;
+
+  const currentTick = activeMarket?.currentTick ?? 0;
+
+  const pctOptions =
+    effectiveLimitType === "takeProfit"
+      ? PERCENTAGE_OPTIONS.takeProfit
+      : PERCENTAGE_OPTIONS.stopLoss;
+
+  const effectivePct =
+    limitPercentage !== null
+      ? limitPercentage
+      : customLimitPct
+        ? parseFloat(customLimitPct)
+        : 0;
+
+  const targetTick =
+    effectivePct > 0
+      ? calculateTargetTick(currentTick, effectivePct, effectiveLimitType === "takeProfit")
+      : null;
+
+  const targetPrice = targetTick !== null ? tickToPrice(targetTick) : null;
+
+  const activeOrders = userOrders.filter((o) => o.status === OrderStatus.Placed);
+
+  // ── Token symbols ───────────────────────────────────────
+  const token0Symbol = activeMarket?.token0?.symbol || "Token0";
+  const token1Symbol = activeMarket?.token1?.symbol || "Token1";
+
+  // Available balance label/value based on context
+  const availableLabel =
+    orderTabType === "market"
+      ? tradeSide === "sell"
+        ? token0Symbol
+        : token1Symbol
+      : token1Symbol; // limit orders always deposit token1 (zeroForOne = false)
+
+  const availableBalance =
+    orderTabType === "market"
+      ? tradeSide === "sell"
+        ? token0Balance
+        : token1Balance
+      : token1Balance;
+
+  // ── Load markets ─────────────────────────────────────────
   useEffect(() => {
     let mounted = true;
     relayerService.getActivePools().then((data) => {
@@ -103,7 +196,7 @@ const TradingTerminal: React.FC = () => {
     return () => { mounted = false; };
   }, []);
 
-  // Load candles + trades
+  // ── Load candles + trades ─────────────────────────────────
   useEffect(() => {
     if (!selectedPool) return;
     let cancelled = false;
@@ -130,7 +223,7 @@ const TradingTerminal: React.FC = () => {
     return () => { cancelled = true; };
   }, [selectedPool, timeframe]);
 
-  // Create chart
+  // ── Create chart ──────────────────────────────────────────
   useEffect(() => {
     if (!chartContainerRef.current) return;
 
@@ -193,7 +286,7 @@ const TradingTerminal: React.FC = () => {
     };
   }, []);
 
-  // Update chart data
+  // ── Update chart data ─────────────────────────────────────
   useEffect(() => {
     if (!seriesRef.current || !candles.length) return;
     const data = candles.map((c) => ({
@@ -204,6 +297,122 @@ const TradingTerminal: React.FC = () => {
     chartRef.current?.timeScale().fitContent();
   }, [candles]);
 
+  // ── Load orders + balances when wallet connects ───────────
+  useEffect(() => {
+    if (isConnected && address) {
+      loadUserOrders();
+      loadBalances();
+    }
+  }, [isConnected, address]);
+
+  const loadUserOrders = useCallback(async () => {
+    if (!address) return;
+    setIsLoadingOrders(true);
+    try {
+      const orders = await orderService.getUserOrders(address);
+      setUserOrders(orders);
+    } catch (err) {
+      console.error("Failed to load orders", err);
+    } finally {
+      setIsLoadingOrders(false);
+    }
+  }, [address]);
+
+  const loadBalances = useCallback(async () => {
+    if (!isConnected) return;
+    try {
+      const [b0, b1] = await Promise.all([
+        orderService.getBalance(POOLKEY.currency0),
+        orderService.getBalance(POOLKEY.currency1),
+      ]);
+      setToken0Balance(parseFloat(b0).toFixed(4));
+      setToken1Balance(parseFloat(b1).toFixed(4));
+    } catch (err) {
+      console.error("Failed to load balances", err);
+    }
+  }, [isConnected]);
+
+  // ── Market swap ───────────────────────────────────────────
+  const handleMarketSwap = async () => {
+    if (!isConnected || !tradeAmount || isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      const amount = parseEther(tradeAmount);
+      const zeroForOne = tradeSide === "sell";
+      const txHash = await executeSwap(POOLKEY, zeroForOne, amount);
+      showSuccess(`Swap executed! TX: ${txHash.slice(0, 10)}...`);
+      setTradeAmount("");
+      loadBalances();
+    } catch (err: any) {
+      showError(err?.message || "Swap failed");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // ── Private limit order ───────────────────────────────────
+  const handleLimitOrder = async () => {
+    if (!isConnected || !tradeAmount || isSubmitting) return;
+    if (!effectivePct || effectivePct <= 0) {
+      showError("Please select or enter a percentage target");
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      const triggerTick = calculateTargetTick(
+        currentTick,
+        effectivePct,
+        effectiveLimitType === "takeProfit"
+      );
+      const orderId = await orderService.createOrder({
+        poolKey: POOLKEY,
+        zeroForOne: false,
+        triggerTick,
+        orderType:
+          effectiveLimitType === "takeProfit" ? OrderType.TakeProfit : OrderType.StopLoss,
+        amount: parseEther(tradeAmount),
+      });
+      showSuccess(`Private order created! ID: ${orderId}`);
+      setTradeAmount("");
+      setLimitPercentage(null);
+      setCustomLimitPct("");
+      loadUserOrders();
+      loadBalances();
+    } catch (err: any) {
+      showError(err?.message || "Failed to create limit order");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // ── Decrypt order ─────────────────────────────────────────
+  const handleDecryptOrder = async (order: Order) => {
+    if (decryptingOrders.has(order.orderId)) return;
+    setDecryptingOrders((prev) => {
+      const s = new Set(prev);
+      s.add(order.orderId);
+      return s;
+    });
+    try {
+      const result = await orderService.decryptOrder(order.triggerTick, order.orderType);
+      if (result) {
+        setDecryptedOrders((prev) => new Map(prev).set(order.orderId, result));
+        showSuccess("Order decrypted!");
+      } else {
+        showError("Failed to decrypt order data");
+      }
+    } catch (err: any) {
+      showError("Decryption failed: " + err?.message);
+    } finally {
+      setDecryptingOrders((prev) => {
+        const s = new Set(prev);
+        s.delete(order.orderId);
+        return s;
+      });
+    }
+  };
+
+  // ── Derived metrics ───────────────────────────────────────
   const latestCandle = candles[candles.length - 1];
   const latestPrice = latestCandle ? Number(latestCandle.close) : null;
 
@@ -222,9 +431,13 @@ const TradingTerminal: React.FC = () => {
     return { change, low: Math.min(...lows), high: Math.max(...highs), volume, trades: tradesCount };
   }, [candles, activeMarket]);
 
-  // Orderbook data
+  // ── Orderbook (simulated depth) ───────────────────────────
   const orderBook = useMemo(() => {
-    if (!latestPrice) return { bids: [] as { price: number; size: number; total: number }[], asks: [] as { price: number; size: number; total: number }[] };
+    if (!latestPrice)
+      return {
+        bids: [] as { price: number; size: number; total: number }[],
+        asks: [] as { price: number; size: number; total: number }[],
+      };
 
     let runningTotal = 0;
     const asks = Array.from({ length: 8 }).map((_, i) => {
@@ -261,23 +474,56 @@ const TradingTerminal: React.FC = () => {
     ? `${activeMarket.token0?.symbol || "Token0"}-${activeMarket.token1?.symbol || "Token1"}`
     : "Select a pool";
 
-  const tokenSymbol = activeMarket?.token0?.symbol || "ETH";
+  // ── Helpers for status display ────────────────────────────
+  const getStatusLabel = (status: OrderStatus) => {
+    switch (status) {
+      case OrderStatus.Placed: return "Active";
+      case OrderStatus.Executed: return "Executed";
+      case OrderStatus.Cancelled: return "Cancelled";
+      default: return "Unknown";
+    }
+  };
 
-  // Mock positions for display
-  const mockPositions = latestPrice
-    ? [
-        {
-          symbol: `${tokenSymbol}-PERP`,
-          leverage: "10x",
-          side: "LONG" as const,
-          size: `18.5 ${tokenSymbol}`,
-          entryPrice: latestPrice * 0.988,
-          markPrice: latestPrice,
-          pnl: latestPrice * 18.5 * 0.012,
-          pnlPercent: 12.5,
-        },
-      ]
-    : [];
+  const getStatusClass = (status: OrderStatus) => {
+    switch (status) {
+      case OrderStatus.Placed: return styles.orderStatusActive;
+      case OrderStatus.Executed: return styles.orderStatusExecuted;
+      case OrderStatus.Cancelled: return styles.orderStatusCancelled;
+      default: return "";
+    }
+  };
+
+  // ── Submit handler ────────────────────────────────────────
+  const handleSubmit = () => {
+    if (!isConnected) {
+      connect();
+      return;
+    }
+    if (orderTabType === "market") {
+      handleMarketSwap();
+    } else {
+      handleLimitOrder();
+    }
+  };
+
+  // ── Submit button label ───────────────────────────────────
+  const submitLabel = () => {
+    if (!isConnected) return "Connect Wallet";
+    if (isSubmitting) return orderTabType === "market" ? "Swapping..." : "Placing Order...";
+    if (orderTabType === "market") {
+      return tradeSide === "buy" ? `Buy ${token0Symbol}` : `Sell ${token0Symbol}`;
+    }
+    if (orderTabType === "stop") return "Place Stop Loss Order";
+    return effectiveLimitType === "takeProfit" ? "Place Take Profit Order" : "Place Stop Loss Order";
+  };
+
+  // ── Reset form when switching order types ─────────────────
+  const handleOrderTabChange = (type: OrderTabType) => {
+    setOrderTabType(type);
+    setTradeAmount("");
+    setLimitPercentage(null);
+    setCustomLimitPct("");
+  };
 
   return (
     <section className={styles.terminalSection}>
@@ -301,7 +547,7 @@ const TradingTerminal: React.FC = () => {
                     {market.token0?.symbol}/{market.token1?.symbol}
                   </p>
                   <span className={styles.marketTicker}>
-                    {market.token0?.symbol}-PERP
+                    {market.token0?.symbol}-SPOT
                   </span>
                 </div>
                 <div className={styles.marketStats}>
@@ -337,7 +583,7 @@ const TradingTerminal: React.FC = () => {
             <div className={styles.headerStats}>
               <div className={styles.pairInfo}>
                 <span className={styles.pairLabel}>{activePairLabel}</span>
-                <span className={styles.pairType}>Perpetual</span>
+                <span className={styles.pairType}>Spot</span>
               </div>
 
               <div className={styles.headerStatItem}>
@@ -345,11 +591,6 @@ const TradingTerminal: React.FC = () => {
                 <span className={styles.headerStatValue}>
                   {latestPrice ? formatUsd(latestPrice, 2) : "--"}
                 </span>
-              </div>
-
-              <div className={styles.headerStatItem}>
-                <span className={styles.headerStatLabel}>Funding</span>
-                <span className={styles.headerStatValue}>0.0102%</span>
               </div>
 
               <div className={styles.headerStatItem}>
@@ -413,15 +654,19 @@ const TradingTerminal: React.FC = () => {
               className={`${styles.positionsTab} ${activePositionTab === "positions" ? styles.positionsTabActive : ""}`}
               onClick={() => setActivePositionTab("positions")}
             >
-              Positions{mockPositions.length > 0 && (
-                <span className={styles.positionsTabCount}>({mockPositions.length})</span>
-              )}
+              Positions
             </button>
             <button
               className={`${styles.positionsTab} ${activePositionTab === "openOrders" ? styles.positionsTabActive : ""}`}
-              onClick={() => setActivePositionTab("openOrders")}
+              onClick={() => {
+                setActivePositionTab("openOrders");
+                if (isConnected && address) loadUserOrders();
+              }}
             >
-              Open Orders<span className={styles.positionsTabCount}>(0)</span>
+              Private Orders
+              {activeOrders.length > 0 && (
+                <span className={styles.positionsTabCount}>({activeOrders.length})</span>
+              )}
             </button>
             <button
               className={`${styles.positionsTab} ${activePositionTab === "tradeHistory" ? styles.positionsTabActive : ""}`}
@@ -433,50 +678,85 @@ const TradingTerminal: React.FC = () => {
               className={`${styles.positionsTab} ${activePositionTab === "pnl" ? styles.positionsTabActive : ""}`}
               onClick={() => setActivePositionTab("pnl")}
             >
-              Realized PnL
+              All Orders
             </button>
           </div>
 
           <div className={styles.positionsTable}>
+            {/* Positions tab */}
             {activePositionTab === "positions" && (
+              <div className={styles.positionsEmpty}>No open positions</div>
+            )}
+
+            {/* Private Orders tab */}
+            {activePositionTab === "openOrders" && (
               <>
-                <div className={styles.positionsTableHead}>
-                  <span>Symbol</span>
-                  <span>Side</span>
-                  <span>Size</span>
-                  <span>Entry Price</span>
-                  <span>Mark Price</span>
-                  <span>PnL (ROE%)</span>
-                  <span>Action</span>
-                </div>
-                {mockPositions.length === 0 ? (
-                  <div className={styles.positionsEmpty}>No open positions</div>
+                {!isConnected ? (
+                  <div className={styles.positionsEmpty}>
+                    Connect your wallet to view private orders
+                  </div>
+                ) : isLoadingOrders ? (
+                  <div className={styles.positionsEmpty}>
+                    <LoadingSpinner size="small" />
+                  </div>
+                ) : activeOrders.length === 0 ? (
+                  <div className={styles.positionsEmpty}>No active private orders</div>
                 ) : (
-                  mockPositions.map((pos, i) => (
-                    <div key={i} className={styles.positionsTableRow}>
-                      <div className={styles.symbolCell}>
-                        <span className={styles.symbolDot} />
-                        <span className={styles.symbolName}>{pos.symbol}</span>
-                        <span className={styles.leverageBadge}>{pos.leverage}</span>
-                      </div>
-                      <span className={pos.side === "LONG" ? styles.sideLong : styles.sideShort}>
-                        {pos.side}
-                      </span>
-                      <span>{pos.size}</span>
-                      <span>{formatUsd(pos.entryPrice, 2)}</span>
-                      <span>{formatUsd(pos.markPrice, 2)}</span>
-                      <span className={pos.pnl >= 0 ? styles.pnlPositive : styles.pnlNegative}>
-                        +{formatUsd(pos.pnl, 2)} ({pos.pnlPercent.toFixed(1)}%)
-                      </span>
-                      <button className={styles.actionButton}>Close</button>
+                  <>
+                    <div className={`${styles.positionsTableHead} ${styles.ordersTableHead}`}>
+                      <span>Order #</span>
+                      <span>Type (Encrypted)</span>
+                      <span>Amount</span>
+                      <span>Direction</span>
+                      <span>Status</span>
+                      <span>Decrypted Info</span>
+                      <span>Action</span>
                     </div>
-                  ))
+                    {activeOrders.map((order) => {
+                      const decrypted = decryptedOrders.get(order.orderId);
+                      const isDecrypting = decryptingOrders.has(order.orderId);
+                      return (
+                        <div key={order.orderId} className={`${styles.positionsTableRow} ${styles.ordersTableRow}`}>
+                          <div className={styles.symbolCell}>
+                            <span className={styles.orderIdBadge}>#{order.orderId}</span>
+                          </div>
+                          <span className={styles.encryptedBadge}>🔒 Private</span>
+                          <span>{formatAmount(order.amount)}</span>
+                          <span className={styles.sideLong}>
+                            {order.zeroForOne ? `${token0Symbol}→${token1Symbol}` : `${token1Symbol}→${token0Symbol}`}
+                          </span>
+                          <span className={getStatusClass(order.status)}>
+                            {getStatusLabel(order.status)}
+                          </span>
+                          <span className={styles.decryptedInfo}>
+                            {decrypted ? (
+                              <span className={styles.decryptedValue}>
+                                {decrypted.orderType ? "Take Profit" : "Stop Loss"} @ tick {decrypted.triggerTick}
+                              </span>
+                            ) : (
+                              <span className={styles.encryptedPlaceholder}>--</span>
+                            )}
+                          </span>
+                          <span>
+                            {!decrypted && (
+                              <button
+                                className={styles.decryptBtn}
+                                onClick={() => handleDecryptOrder(order)}
+                                disabled={isDecrypting}
+                              >
+                                {isDecrypting ? "..." : "Decrypt"}
+                              </button>
+                            )}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </>
                 )}
               </>
             )}
-            {activePositionTab === "openOrders" && (
-              <div className={styles.positionsEmpty}>No open orders</div>
-            )}
+
+            {/* Trade History tab */}
             {activePositionTab === "tradeHistory" && (
               <>
                 {trades.length === 0 ? (
@@ -523,8 +803,69 @@ const TradingTerminal: React.FC = () => {
                 )}
               </>
             )}
+
+            {/* All Orders tab */}
             {activePositionTab === "pnl" && (
-              <div className={styles.positionsEmpty}>No realized PnL data</div>
+              <>
+                {!isConnected ? (
+                  <div className={styles.positionsEmpty}>Connect your wallet to view orders</div>
+                ) : isLoadingOrders ? (
+                  <div className={styles.positionsEmpty}><LoadingSpinner size="small" /></div>
+                ) : userOrders.length === 0 ? (
+                  <div className={styles.positionsEmpty}>No orders found</div>
+                ) : (
+                  <>
+                    <div className={`${styles.positionsTableHead} ${styles.ordersTableHead}`}>
+                      <span>Order #</span>
+                      <span>Type (Encrypted)</span>
+                      <span>Amount</span>
+                      <span>Direction</span>
+                      <span>Status</span>
+                      <span>Decrypted Info</span>
+                      <span>Action</span>
+                    </div>
+                    {userOrders.map((order) => {
+                      const decrypted = decryptedOrders.get(order.orderId);
+                      const isDecrypting = decryptingOrders.has(order.orderId);
+                      return (
+                        <div key={order.orderId} className={`${styles.positionsTableRow} ${styles.ordersTableRow}`}>
+                          <div className={styles.symbolCell}>
+                            <span className={styles.orderIdBadge}>#{order.orderId}</span>
+                          </div>
+                          <span className={styles.encryptedBadge}>🔒 Private</span>
+                          <span>{formatAmount(order.amount)}</span>
+                          <span className={styles.sideLong}>
+                            {order.zeroForOne ? `${token0Symbol}→${token1Symbol}` : `${token1Symbol}→${token0Symbol}`}
+                          </span>
+                          <span className={getStatusClass(order.status)}>
+                            {getStatusLabel(order.status)}
+                          </span>
+                          <span className={styles.decryptedInfo}>
+                            {decrypted ? (
+                              <span className={styles.decryptedValue}>
+                                {decrypted.orderType ? "Take Profit" : "Stop Loss"} @ tick {decrypted.triggerTick}
+                              </span>
+                            ) : (
+                              <span className={styles.encryptedPlaceholder}>--</span>
+                            )}
+                          </span>
+                          <span>
+                            {!decrypted && (
+                              <button
+                                className={styles.decryptBtn}
+                                onClick={() => handleDecryptOrder(order)}
+                                disabled={isDecrypting}
+                              >
+                                {isDecrypting ? "..." : "Decrypt"}
+                              </button>
+                            )}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </>
+                )}
+              </>
             )}
           </div>
         </div>
@@ -539,7 +880,7 @@ const TradingTerminal: React.FC = () => {
             <span>Total</span>
           </div>
 
-          {/* Asks (reversed so highest price at top) */}
+          {/* Asks */}
           <div className={styles.orderbookAsks}>
             {orderBook.asks.map((level, i) => (
               <div key={`ask-${i}`} className={styles.orderbookRow}>
@@ -580,93 +921,193 @@ const TradingTerminal: React.FC = () => {
           </div>
         </div>
 
-        {/* Trade Form */}
+        {/* ── Trade Form ── */}
         <div className={styles.tradeFormSection}>
+          {/* Buy / Sell tabs */}
           <div className={styles.tradeBoxTabs}>
             <button
               className={tradeSide === "buy" ? styles.tradeTabBuyActive : ""}
               onClick={() => setTradeSide("buy")}
             >
-              Buy / Long
+              Buy
             </button>
             <button
               className={tradeSide === "sell" ? styles.tradeTabSellActive : ""}
               onClick={() => setTradeSide("sell")}
             >
-              Sell / Short
+              Sell
             </button>
           </div>
 
+          {/* Market / Limit / Stop tabs */}
           <div className={styles.orderTypeTabs}>
-            {(["market", "limit", "stop"] as OrderType[]).map((t) => (
+            {(["market", "limit", "stop"] as OrderTabType[]).map((t) => (
               <button
                 key={t}
-                className={`${styles.orderTypeTab} ${orderType === t ? styles.orderTypeTabActive : ""}`}
-                onClick={() => setOrderType(t)}
+                className={`${styles.orderTypeTab} ${orderTabType === t ? styles.orderTypeTabActive : ""}`}
+                onClick={() => handleOrderTabChange(t)}
               >
-                {t.charAt(0).toUpperCase() + t.slice(1)}
+                {t === "market" ? "Market" : t === "limit" ? "Limit" : "Stop"}
               </button>
             ))}
           </div>
 
-          <div className={styles.tradeFormGroup}>
-            <label>Order Size (USD)</label>
-            <div className={styles.inputWrapper}>
-              <span className={styles.inputPrefix}>USD</span>
-              <input type="number" placeholder="0.00" />
-            </div>
-          </div>
+          {/* ── Market order form ── */}
+          {orderTabType === "market" && (
+            <>
+              <div className={styles.tradeFormGroup}>
+                <label>Amount ({tradeSide === "sell" ? token0Symbol : token1Symbol})</label>
+                <div className={styles.inputWrapper}>
+                  <span className={styles.inputPrefix}>
+                    {tradeSide === "sell" ? token0Symbol : token1Symbol}
+                  </span>
+                  <input
+                    type="number"
+                    placeholder="0.00"
+                    value={tradeAmount}
+                    onChange={(e) => setTradeAmount(e.target.value)}
+                    min="0"
+                    step="any"
+                  />
+                </div>
+              </div>
 
-          <div className={styles.leverageSection}>
-            <div className={styles.leverageHeader}>
-              <span className={styles.leverageLabel}>Leverage</span>
-              <span className={styles.leverageValue}>{leverage}x</span>
-            </div>
-            <input
-              type="range"
-              min="1"
-              max="50"
-              value={leverage}
-              onChange={(e) => setLeverage(Number(e.target.value))}
-              className={styles.leverageSlider}
-            />
-            <div className={styles.leverageMarks}>
-              {LEVERAGE_MARKS.map((m) => (
-                <button
-                  key={m}
-                  className={`${styles.leverageMark} ${leverage === m ? styles.leverageMarkActive : ""}`}
-                  onClick={() => setLeverage(m)}
-                >
-                  {m}x
-                </button>
-              ))}
-            </div>
-          </div>
+              <div className={styles.tradeBreakdown}>
+                <div className={styles.breakdownRow}>
+                  <p>Market Price</p>
+                  <strong>{latestPrice ? formatUsd(latestPrice, 2) : "--"}</strong>
+                </div>
+                <div className={styles.breakdownRow}>
+                  <p>Direction</p>
+                  <strong className={tradeSide === "buy" ? styles.sideLong : styles.sideShort}>
+                    {tradeSide === "buy"
+                      ? `Buy ${token0Symbol} with ${token1Symbol}`
+                      : `Sell ${token0Symbol} for ${token1Symbol}`}
+                  </strong>
+                </div>
+                <div className={styles.breakdownRow}>
+                  <p>Slippage</p>
+                  <strong>Auto</strong>
+                </div>
+              </div>
+            </>
+          )}
 
-          <div className={styles.tradeBreakdown}>
-            <div className={styles.breakdownRow}>
-              <p>Entry Price</p>
-              <strong>{latestPrice ? formatUsd(latestPrice, 2) : "--"}</strong>
-            </div>
-            <div className={`${styles.breakdownRow} ${styles.breakdownRowDanger}`}>
-              <p>Liquidation Price</p>
-              <strong>{latestPrice ? formatUsd(latestPrice * (tradeSide === "buy" ? 0.75 : 1.25), 2) : "--"}</strong>
-            </div>
-            <div className={styles.breakdownRow}>
-              <p>Est. Fees</p>
-              <strong>$1.20</strong>
-            </div>
-          </div>
+          {/* ── Limit / Stop order form ── */}
+          {(orderTabType === "limit" || orderTabType === "stop") && (
+            <>
+              {/* Take Profit / Stop Loss toggle — only for Limit tab */}
+              {orderTabType === "limit" && (
+                <div className={styles.limitTypeToggle}>
+                  <button
+                    className={`${styles.limitTypeBtn} ${limitPrivacyType === "takeProfit" ? styles.limitTypeBtnActive : ""}`}
+                    onClick={() => { setLimitPrivacyType("takeProfit"); setLimitPercentage(null); }}
+                  >
+                    Take Profit
+                  </button>
+                  <button
+                    className={`${styles.limitTypeBtn} ${limitPrivacyType === "stopLoss" ? styles.limitTypeBtnStopActive : ""}`}
+                    onClick={() => { setLimitPrivacyType("stopLoss"); setLimitPercentage(null); }}
+                  >
+                    Stop Loss
+                  </button>
+                </div>
+              )}
 
+              {orderTabType === "stop" && (
+                <div className={styles.orderTypeNote}>
+                  Stop Loss — triggers when price drops
+                </div>
+              )}
+
+              {/* Percentage selector */}
+              <div className={styles.tradeFormGroup}>
+                <label>
+                  Trigger at ({effectiveLimitType === "takeProfit" ? "+" : "-"}%)
+                </label>
+                <div className={styles.pctGrid}>
+                  {pctOptions.map((pct) => (
+                    <button
+                      key={pct}
+                      className={`${styles.pctBtn} ${limitPercentage === pct ? styles.pctBtnActive : ""}`}
+                      onClick={() => { setLimitPercentage(pct); setCustomLimitPct(""); }}
+                    >
+                      {pct}%
+                    </button>
+                  ))}
+                  <button
+                    className={`${styles.pctBtn} ${limitPercentage === null && customLimitPct ? styles.pctBtnActive : ""}`}
+                    onClick={() => setLimitPercentage(null)}
+                  >
+                    Custom
+                  </button>
+                </div>
+
+                {limitPercentage === null && (
+                  <div className={styles.inputWrapper} style={{ marginTop: "0.4rem" }}>
+                    <span className={styles.inputPrefix}>%</span>
+                    <input
+                      type="number"
+                      placeholder="e.g. 7.5"
+                      value={customLimitPct}
+                      onChange={(e) => setCustomLimitPct(e.target.value)}
+                      min="0.1"
+                      max="100"
+                      step="0.1"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Amount */}
+              <div className={styles.tradeFormGroup}>
+                <label>Amount ({token1Symbol} to deposit)</label>
+                <div className={styles.inputWrapper}>
+                  <span className={styles.inputPrefix}>{token1Symbol}</span>
+                  <input
+                    type="number"
+                    placeholder="0.00"
+                    value={tradeAmount}
+                    onChange={(e) => setTradeAmount(e.target.value)}
+                    min="0"
+                    step="any"
+                  />
+                </div>
+              </div>
+
+              {/* Breakdown */}
+              <div className={styles.tradeBreakdown}>
+                <div className={styles.breakdownRow}>
+                  <p>Current Tick</p>
+                  <strong>{currentTick || "--"}</strong>
+                </div>
+                <div className={styles.breakdownRow}>
+                  <p>Target Price</p>
+                  <strong className={effectiveLimitType === "takeProfit" ? styles.pnlPositive : styles.pnlNegative}>
+                    {targetPrice ? formatUsd(targetPrice, 4) : "--"}
+                  </strong>
+                </div>
+                <div className={styles.breakdownRow}>
+                  <p>Order Type</p>
+                  <strong className={styles.encryptedBadge}>🔒 Private (FHE)</strong>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Submit button */}
           <button
-            className={`${styles.submitOrderButton} ${tradeSide === "sell" ? styles.submitSellButton : ""}`}
+            className={`${styles.submitOrderButton} ${tradeSide === "sell" && orderTabType === "market" ? styles.submitSellButton : ""} ${orderTabType !== "market" ? styles.submitLimitButton : ""}`}
+            onClick={handleSubmit}
+            disabled={isSubmitting || (isConnected && !tradeAmount)}
           >
-            Place {tradeSide === "buy" ? "Buy" : "Sell"} Order
+            {submitLabel()}
           </button>
 
+          {/* Available balance */}
           <div className={styles.availableBalance}>
-            <span>Available</span>
-            <span>1,249.50 USDC</span>
+            <span>Available ({availableLabel})</span>
+            <span>{availableBalance}</span>
           </div>
         </div>
       </div>

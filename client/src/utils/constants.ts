@@ -1,4 +1,15 @@
 export const HOOK_ADDRESS = "0x569b28a558d1229e172e77202d580052179d10c0";
+
+// Network
+export const ARBITRUM_SEPOLIA_CHAIN_ID = 421614;
+export const ARBITRUM_SEPOLIA_HEX = "0x66eee";
+export const ARBITRUM_SEPOLIA_PARAMS = {
+  chainId: "0x66eee",
+  chainName: "Arbitrum Sepolia",
+  nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+  rpcUrls: ["https://sepolia-rollup.arbitrum.io/rpc"],
+  blockExplorerUrls: ["https://sepolia.arbiscan.io"],
+};
 export const PROVIDER_RPC_URL =
   import.meta.env.VITE_PROVIDER_RPC_URL || "http://127.0.0.1:8545";
 export const DEFAULT_DEPLOYED_POOL_ID =

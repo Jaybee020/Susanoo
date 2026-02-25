@@ -832,6 +832,176 @@
   font-weight: 500;
 }
 
+/* ── Limit order type toggle ───────────────────────── */
+.limitTypeToggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.limitTypeBtn {
+  border-radius: 0;
+  border: none;
+  padding: 0.45rem 0.75rem;
+  background: rgba(255, 255, 255, 0.02);
+  color: #7a8194;
+  font-weight: 600;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.limitTypeBtn:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.limitTypeBtnActive {
+  background: rgba(39, 255, 180, 0.12) !important;
+  color: #27ffb4 !important;
+}
+
+.limitTypeBtnStopActive {
+  background: rgba(255, 92, 114, 0.12) !important;
+  color: #ff5c72 !important;
+}
+
+/* ── Order type note ────────────────────────────────── */
+.orderTypeNote {
+  font-size: 0.7rem;
+  color: #ff5c72;
+  padding: 0.35rem 0.5rem;
+  background: rgba(255, 92, 114, 0.06);
+  border-radius: 5px;
+  border: 1px solid rgba(255, 92, 114, 0.12);
+  font-weight: 500;
+}
+
+/* ── Percentage grid ────────────────────────────────── */
+.pctGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.3rem;
+}
+
+.pctBtn {
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.02);
+  color: #7a8194;
+  font-size: 0.72rem;
+  font-weight: 500;
+  padding: 0.3rem 0.25rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: center;
+}
+
+.pctBtn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #c8ccd8;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.pctBtnActive {
+  background: rgba(39, 255, 180, 0.1);
+  color: #27ffb4;
+  border-color: rgba(39, 255, 180, 0.25);
+}
+
+/* ── Limit submit button variant ────────────────────── */
+.submitLimitButton {
+  background: rgba(39, 255, 180, 0.15) !important;
+  color: #27ffb4 !important;
+  border: 1px solid rgba(39, 255, 180, 0.3) !important;
+}
+
+.submitLimitButton:hover {
+  background: rgba(39, 255, 180, 0.22) !important;
+  opacity: 1 !important;
+}
+
+/* ── Orders table (Open Orders tab) ─────────────────── */
+.ordersTableHead {
+  grid-template-columns: 1fr 1.1fr 0.9fr 1.1fr 0.8fr 1.5fr 0.7fr !important;
+}
+
+.ordersTableRow {
+  grid-template-columns: 1fr 1.1fr 0.9fr 1.1fr 0.8fr 1.5fr 0.7fr !important;
+}
+
+.orderIdBadge {
+  font-size: 0.72rem;
+  color: #a0a6b8;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.encryptedBadge {
+  font-size: 0.7rem;
+  color: #7a8194;
+}
+
+.encryptedPlaceholder {
+  color: #3a3f50;
+  font-size: 0.72rem;
+}
+
+.decryptedInfo {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.decryptedValue {
+  font-size: 0.72rem;
+  color: #27ffb4;
+  font-weight: 500;
+}
+
+.decryptBtn {
+  font-size: 0.68rem;
+  padding: 0.22rem 0.5rem;
+  border-radius: 4px;
+  border: 1px solid rgba(39, 255, 180, 0.25);
+  background: rgba(39, 255, 180, 0.06);
+  color: #27ffb4;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease;
+}
+
+.decryptBtn:hover {
+  background: rgba(39, 255, 180, 0.12);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+.decryptBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Order status badges ────────────────────────────── */
+.orderStatusActive {
+  color: #9D75E6;
+  font-weight: 600;
+  font-size: 0.72rem;
+}
+
+.orderStatusExecuted {
+  color: #27ffb4;
+  font-weight: 600;
+  font-size: 0.72rem;
+}
+
+.orderStatusCancelled {
+  color: #ff5c72;
+  font-weight: 600;
+  font-size: 0.72rem;
+}
+
 /* ── Hide old unused classes ───────────────────────── */
 .kicker,
 .analyzeButton,

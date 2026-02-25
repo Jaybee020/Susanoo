@@ -1,10 +1,6 @@
 import { ethers, MaxUint256 } from "ethers";
 import { cofheService } from "./cofheService";
-import {
-  OrderStatus,
-  OrderType,
-  HOOK_ADDRESS,
-} from "../utils/constants";
+import { OrderStatus, OrderType, HOOK_ADDRESS } from "../utils/constants";
 import SusanooABI from "../utils/abi.json";
 import { Contract } from "ethers";
 
@@ -71,7 +67,7 @@ export class LimitOrder {
     return new ethers.Contract(
       this.contractAddress,
       LimitOrder.ABI,
-      cofheService.getProvider()
+      cofheService.getProvider(),
     );
   }
 
@@ -89,11 +85,11 @@ export class LimitOrder {
       // Encrypt order parameters using cofhejs
       const encryptedData = await cofheService.encryptOrderData(
         params.triggerTick,
-        params.orderType === OrderType.TakeProfit
+        params.orderType === OrderType.TakeProfit,
       );
 
       await this.approveToken(
-        params.zeroForOne ? params.poolKey.currency0 : params.poolKey.currency1
+        params.zeroForOne ? params.poolKey.currency0 : params.poolKey.currency1,
       );
 
       if (
@@ -108,7 +104,7 @@ export class LimitOrder {
         encryptedData.data,
         params.poolKey,
         params.zeroForOne,
-        params.amount
+        params.amount,
       );
 
       // Execute transaction
@@ -119,7 +115,7 @@ export class LimitOrder {
         encryptedData.data[0], // encrypted trigger tick
         encryptedData.data[1], // encrypted order type
         params.amount,
-        { gasLimit: 30000000 }
+        { gasLimit: 30000000 },
       );
 
       const receipt = await tx.wait();
@@ -164,7 +160,7 @@ export class LimitOrder {
       // Encrypt new trigger tick
       const encryptedData = await cofheService.encryptOrderData(
         params.newTriggerTick,
-        true
+        true,
       );
 
       if (
@@ -182,7 +178,7 @@ export class LimitOrder {
         params.orderId,
         encryptedData.data[0],
         params.amountDelta || 0,
-        { gasLimit: 30000000 }
+        { gasLimit: 30000000 },
       );
 
       const receipt = await tx.wait();
@@ -220,19 +216,19 @@ export class LimitOrder {
    */
   async getHistoricalOrders(
     traderAddress?: string,
-    fromBlock: number = 0,
-    toBlock: number | string = "latest"
+    fromBlock: number = 195626131,
+    toBlock: number | string = "latest",
   ): Promise<Order[]> {
     try {
       const filter = this.getContractWithoutSigner().filters.OrderPlaced(
         null, // orderId
-        traderAddress || null // trader (null means all traders)
+        traderAddress || null, // trader (null means all traders)
       );
 
       const events = await this.getContractWithoutSigner().queryFilter(
         filter,
         fromBlock,
-        toBlock
+        toBlock,
       );
 
       const orders: Order[] = [];
@@ -240,13 +236,24 @@ export class LimitOrder {
       for (const event of events) {
         if ("args" in event && event.args) {
           const args = event.args;
+          const orderId = args.orderId.toString();
+
+          // Fetch live status from on-chain orders mapping
+          let status = OrderStatus.Placed;
+          try {
+            const onChainOrder = await this.getContractWithoutSigner().orders(orderId);
+            status = Number(onChainOrder.status) as OrderStatus;
+          } catch {
+            // Fall back to Placed if the call fails
+          }
+
           orders.push({
-            orderId: args.orderId.toString(),
+            orderId,
             trader: args.trader,
             zeroForOne: args.zeroForOne,
-            status: OrderStatus.Placed, // Initially placed
-            orderType: args.orderType, // This is encrypted in reality
-            triggerTick: Number(args.triggerTick), // This is encrypted in reality
+            status,
+            orderType: args.orderType,
+            triggerTick: Number(args.triggerTick),
             amount: args.amount,
             poolId: args.keyId,
             transactionHash: event.transactionHash,
@@ -255,6 +262,8 @@ export class LimitOrder {
           });
         }
       }
+
+      console.log("Fetched historical orders:", orders);
 
       return orders;
     } catch (error) {
@@ -269,18 +278,18 @@ export class LimitOrder {
   async getExecutionHistory(
     traderAddress?: string,
     fromBlock: number = 0,
-    toBlock: number | string = "latest"
+    toBlock: number | string = "latest",
   ): Promise<any[]> {
     try {
       const filter = this.getContractWithoutSigner().filters.OrderExecuted(
         null, // orderId
-        traderAddress || null // trader
+        traderAddress || null, // trader
       );
 
       const events = await this.getContractWithoutSigner().queryFilter(
         filter,
         fromBlock,
-        toBlock
+        toBlock,
       );
 
       const executions = [];
@@ -313,18 +322,18 @@ export class LimitOrder {
   async getCancellationHistory(
     traderAddress?: string,
     fromBlock: number = 0,
-    toBlock: number | string = "latest"
+    toBlock: number | string = "latest",
   ): Promise<any[]> {
     try {
       const filter = this.getContractWithoutSigner().filters.OrderCancelled(
         null, // orderId
-        traderAddress || null // trader
+        traderAddress || null, // trader
       );
 
       const events = await this.getContractWithoutSigner().queryFilter(
         filter,
         fromBlock,
-        toBlock
+        toBlock,
       );
 
       const cancellations = [];
@@ -355,9 +364,8 @@ export class LimitOrder {
    */
   async getQueueLength(poolKey: PoolKey): Promise<number> {
     try {
-      const length = await this.getContractWithoutSigner().getQueueLength(
-        poolKey
-      );
+      const length =
+        await this.getContractWithoutSigner().getQueueLength(poolKey);
       return Number(length);
     } catch (error) {
       console.error("Error fetching queue length:", error);
@@ -403,12 +411,12 @@ export class LimitOrder {
    */
   async unsealOrderData(
     encryptedTriggerTick: any,
-    encryptedOrderType: any
+    encryptedOrderType: any,
   ): Promise<{ triggerTick: number; orderType: boolean } | null> {
     try {
       const result = await cofheService.unsealOrderData(
         encryptedTriggerTick,
-        encryptedOrderType
+        encryptedOrderType,
       );
 
       return result;

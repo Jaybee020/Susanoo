@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
 import { ethers } from "ethers";
+import { ARBITRUM_SEPOLIA_CHAIN_ID } from "../utils/constants";
 
 interface WalletContextType {
   address: string;
@@ -7,6 +8,7 @@ interface WalletContextType {
   provider: ethers.BrowserProvider | null;
   isConnected: boolean;
   chainId: number | null;
+  isCorrectNetwork: boolean;
   connect: () => Promise<void>;
   disconnect: () => void;
 }
@@ -20,6 +22,7 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const [chainId, setChainId] = useState<number | null>(null);
 
   const isConnected = !!address;
+  const isCorrectNetwork = chainId === ARBITRUM_SEPOLIA_CHAIN_ID;
 
   const handleAccountsChanged = useCallback(async (accounts: string[]) => {
     if (accounts.length === 0) {
@@ -83,7 +86,7 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   }, []);
 
   return (
-    <WalletContext.Provider value={{ address, signer, provider, isConnected, chainId, connect, disconnect }}>
+    <WalletContext.Provider value={{ address, signer, provider, isConnected, chainId, isCorrectNetwork, connect, disconnect }}>
       {children}
     </WalletContext.Provider>
   );

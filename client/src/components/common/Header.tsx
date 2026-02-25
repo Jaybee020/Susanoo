@@ -1,12 +1,25 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useWallet } from "../../contexts/WalletContext";
+import { cofheService } from "../../services/cofheService";
 import styles from "./Header.module.css";
 
 const Header: React.FC = () => {
   const location = useLocation();
-  const { address, isConnected, connect } = useWallet();
+  const { address, isConnected, connect, isCorrectNetwork } = useWallet();
   const [isConnecting, setIsConnecting] = React.useState(false);
+  const [isSwitching, setIsSwitching] = React.useState(false);
+
+  const handleSwitchNetwork = async () => {
+    setIsSwitching(true);
+    try {
+      await cofheService.ensureArbitrumSepolia();
+    } catch (err) {
+      console.error("Failed to switch network:", err);
+    } finally {
+      setIsSwitching(false);
+    }
+  };
 
   const handleConnectWallet = async () => {
     setIsConnecting(true);
@@ -29,6 +42,20 @@ const Header: React.FC = () => {
 
   return (
     <header className={styles.header}>
+      {isConnected && !isCorrectNetwork && (
+        <div className={styles.networkBanner}>
+          <span className={styles.networkBannerText}>
+            Wrong network — please switch to Arbitrum Sepolia
+          </span>
+          <button
+            className={styles.networkSwitchBtn}
+            onClick={handleSwitchNetwork}
+            disabled={isSwitching}
+          >
+            {isSwitching ? "Switching..." : "Switch Network"}
+          </button>
+        </div>
+      )}
       <div className="container">
         <div className={styles.headerContent}>
           <Link to="/" className={styles.logo}>

@@ -154,6 +154,40 @@
   transform: none;
 }
 
+/* ── Network warning banner ─────────────────────────── */
+.networkBanner {
+  background: rgba(255, 152, 0, 0.12);
+  border-bottom: 1px solid rgba(255, 152, 0, 0.25);
+  padding: 0.4rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.networkBannerText {
+  font-size: 0.8rem;
+  color: #ffb347;
+  font-weight: 500;
+}
+
+.networkSwitchBtn {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.75rem;
+  border-radius: 5px;
+  border: 1px solid rgba(255, 152, 0, 0.4);
+  background: rgba(255, 152, 0, 0.1);
+  color: #ffb347;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  white-space: nowrap;
+}
+
+.networkSwitchBtn:hover {
+  background: rgba(255, 152, 0, 0.2);
+}
+
 @media (max-width: 1024px) {
   .searchInput {
     width: 150px;
