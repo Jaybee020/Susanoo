@@ -1,100 +1,114 @@
 .ordersPage {
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
   padding: 2rem 0;
-  min-height: 80vh;
 }
 
-.header {
+.ordersSection {
+  background: linear-gradient(135deg, rgba(14, 16, 22, 0.9), rgba(9, 11, 18, 0.98));
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 24px;
+  padding: 2rem;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4);
+}
+
+.ordersHeader {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 3rem;
   gap: 2rem;
-}
-
-.titleSection h1 {
-  font-size: 2.5rem;
-  margin-bottom: 0.5rem;
-  color: #fff;
-  font-weight: 700;
-}
-
-.titleSection p {
-  color: #888;
-  font-size: 1.1rem;
-  margin-bottom: 1rem;
-}
-
-.walletInfo {
-  display: flex;
   align-items: center;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
+  flex-wrap: wrap;
 }
 
-.walletLabel {
-  color: #888;
-  font-size: 0.875rem;
+.sectionKicker {
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #9d75e6;
+  font-size: 0.75rem;
+  margin-bottom: 0.2rem;
 }
 
-.walletAddress {
-  color: #9D75E6;
-  font-family: "JetBrains Mono", monospace;
-  font-size: 0.875rem;
-  background-color: #1e1e1e;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  border: 1px solid #2a2a2a;
+.ordersHeader h2 {
+  font-size: 2rem;
+  color: #fff;
+  margin-bottom: 0.25rem;
+}
+
+.sectionSubtitle {
+  color: #7d8698;
+  font-size: 0.95rem;
 }
 
 .headerActions {
   display: flex;
   align-items: center;
   gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.walletInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  padding: 0.8rem 1rem;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.walletLabel {
+  color: #777f92;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+
+.walletAddress {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.9rem;
+  color: #e0e3ff;
 }
 
 .refreshButton {
-  background-color: #1e1e1e;
-  color: white;
-  border: 1px solid #2a2a2a;
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0.85rem 1.5rem;
+  border-radius: 999px;
+  font-weight: 600;
+  color: #fdfdfd;
+  transition: transform 0.2s ease, border-color 0.2s ease;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  white-space: nowrap;
+  gap: 0.4rem;
 }
 
 .refreshButton:hover:not(:disabled) {
-  background-color: #2a2a2a;
-  border-color: #9D75E6;
+  border-color: #27ffb4;
   transform: translateY(-1px);
 }
 
 .refreshButton:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
-  transform: none;
 }
 
 .createButton {
-  background-color: #9D75E6;
-  color: white;
-  text-decoration: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  font-weight: 600;
-  transition: all 0.2s;
-  white-space: nowrap;
+  background: linear-gradient(135deg, #27ffb4, #12b5ff);
+  color: #050b10;
+  font-weight: 700;
+  padding: 0.85rem 1.75rem;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  box-shadow: 0 12px 30px rgba(18, 181, 255, 0.25);
 }
 
 .createButton:hover {
-  background-color: #8a65d4;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(157, 117, 230, 0.3);
-  color: white;
+  transform: translateY(-2px);
+  color: #050b10;
 }
 
 .loadingContainer {
@@ -104,124 +118,87 @@
   justify-content: center;
   padding: 4rem 2rem;
   text-align: center;
-}
-
-.loadingContainer p {
-  color: #888;
-  margin-top: 1rem;
-  font-size: 1.1rem;
+  color: #878e9e;
 }
 
 .emptyState {
+  margin-top: 2rem;
   text-align: center;
   padding: 4rem 2rem;
-  background-color: #1e1e1e;
-  border-radius: 12px;
-  border: 1px solid #2a2a2a;
+  background: rgba(9, 11, 18, 0.9);
+  border-radius: 20px;
+  border: 1px dashed rgba(255, 255, 255, 0.1);
 }
 
 .emptyIcon {
-  font-size: 4rem;
+  font-size: 3rem;
   margin-bottom: 1rem;
 }
 
 .emptyState h3 {
-  margin-bottom: 1rem;
   color: #fff;
-  font-size: 1.5rem;
-  font-weight: 600;
+  margin-bottom: 0.75rem;
 }
 
 .emptyState p {
-  color: #888;
-  margin-bottom: 2rem;
-  font-size: 1.1rem;
+  color: #7e8497;
+  margin-bottom: 1.5rem;
 }
 
 .createOrderLink {
-  background-color: #9D75E6;
-  color: white;
-  text-decoration: none;
-  padding: 1rem 2rem;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 1.1rem;
-  transition: all 0.2s;
   display: inline-block;
+  padding: 0.85rem 2rem;
+  border-radius: 999px;
+  background: rgba(157, 117, 230, 0.2);
+  border: 1px solid rgba(157, 117, 230, 0.5);
+  color: #fff;
+  font-weight: 600;
 }
 
 .createOrderLink:hover {
-  background-color: #8a65d4;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(157, 117, 230, 0.3);
-  color: white;
+  border-color: #fff;
 }
 
 .ordersContainer {
-  /* Container for orders list */
-}
-
-.ordersHeader {
+  margin-top: 2rem;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid #2a2a2a;
-}
-
-.ordersHeader h2 {
-  color: #fff;
-  font-size: 1.5rem;
-  margin: 0;
-  font-weight: 600;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
 .orderStats {
   display: flex;
   gap: 1.5rem;
+  flex-wrap: wrap;
+  color: #8c93a6;
 }
 
 .stat {
-  color: #888;
-  font-size: 0.875rem;
-  font-weight: 500;
+  font-size: 0.9rem;
+  padding: 0.5rem 1rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.03);
 }
 
 .ordersList {
-  /* Orders list container */
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.5rem;
 }
 
-@media (max-width: 768px) {
-  .header {
-    flex-direction: column;
-    align-items: stretch;
-    text-align: center;
-  }
-
-  .titleSection h1 {
-    font-size: 2rem;
-  }
-
-  .headerActions {
-    justify-content: center;
-    flex-wrap: wrap;
+@media (max-width: 900px) {
+  .ordersSection {
+    padding: 1.5rem;
   }
 
   .ordersHeader {
     flex-direction: column;
-    align-items: stretch;
-    gap: 1rem;
-    text-align: center;
+    align-items: flex-start;
   }
 
-  .orderStats {
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 1rem;
-  }
-
-  .walletInfo {
-    justify-content: center;
+  .headerActions {
+    width: 100%;
+    justify-content: flex-start;
   }
 }

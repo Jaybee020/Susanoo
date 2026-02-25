@@ -12,10 +12,11 @@
   "dependencies": {
     "cofhejs": "^0.3.1",
     "ethers": "^6.15.0",
+    "lightweight-charts": "^5.1.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^6.26.2",
-    "react-hook-form": "^7.53.0"
+    "react-hook-form": "^7.53.0",
+    "react-router-dom": "^6.26.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.11.1",
